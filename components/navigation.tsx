@@ -58,19 +58,19 @@ export default function Navigation() {
             {/* Desktop Menu */}
             <div className="hidden lg:flex items-center space-x-1">
               <a
-                href="#"
+                href="/buy"
                 className="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
               >
                 Buy
               </a>
               <a
-                href="#"
+                href="/rent"
                 className="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
               >
                 Rent
               </a>
               <a
-                href="#"
+                href="/sell"
                 className="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
               >
                 Sell
@@ -84,25 +84,25 @@ export default function Navigation() {
                 <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
                   <div className="py-2">
                     <a
-                      href="#"
+                      href="/agents"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                     >
                       Find Agents
                     </a>
                     <a
-                      href="#"
+                      href="/services/property-valuation"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                     >
                       Property Valuation
                     </a>
                     <a
-                      href="#"
+                      href="/services/mortgage-calculator"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                     >
                       Mortgage Calculator
                     </a>
                     <a
-                      href="#"
+                      href="/services/market-reports"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                     >
                       Market Reports
@@ -111,7 +111,7 @@ export default function Navigation() {
                 </div>
               </div>
               <a
-                href="#"
+                href="/blog"
                 className="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
               >
                 Blog
@@ -178,21 +178,21 @@ export default function Navigation() {
           <div className="px-4 py-6 space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
             {/* Mobile Navigation Links */}
             <a
-              href="#"
+              href="/buy"
               className="block text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 border-b border-gray-100"
               onClick={closeMobileMenu}
             >
               Buy Properties
             </a>
             <a
-              href="#"
+              href="/rent"
               className="block text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 border-b border-gray-100"
               onClick={closeMobileMenu}
             >
               Rent Properties
             </a>
             <a
-              href="#"
+              href="/sell"
               className="block text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 border-b border-gray-100"
               onClick={closeMobileMenu}
             >
@@ -205,28 +205,28 @@ export default function Navigation() {
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Services</h3>
                 <div className="space-y-2 ml-2">
                   <a
-                    href="#"
+                    href="/agents"
                     className="block text-gray-600 py-2 px-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
                     onClick={closeMobileMenu}
                   >
                     Find Agents
                   </a>
                   <a
-                    href="#"
+                    href="/services/property-valuation"
                     className="block text-gray-600 py-2 px-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
                     onClick={closeMobileMenu}
                   >
                     Property Valuation
                   </a>
                   <a
-                    href="#"
+                    href="/services/mortgage-calculator"
                     className="block text-gray-600 py-2 px-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
                     onClick={closeMobileMenu}
                   >
                     Mortgage Calculator
                   </a>
                   <a
-                    href="#"
+                    href="/services/market-reports"
                     className="block text-gray-600 py-2 px-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
                     onClick={closeMobileMenu}
                   >
@@ -237,7 +237,7 @@ export default function Navigation() {
             </div>
 
             <a
-              href="#"
+              href="/blog"
               className="block text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 border-b border-gray-100"
               onClick={closeMobileMenu}
             >
