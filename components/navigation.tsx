@@ -2,10 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { Home, User, ChevronDown } from "lucide-react"
+import SignInModal from "./sign-in-modal"
+import SignUpModal from "./sign-up-modal"
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false)
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,6 +26,29 @@ export default function Navigation() {
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false)
+  }
+
+  const openSignInModal = () => {
+    setIsSignInModalOpen(true)
+    closeMobileMenu()
+  }
+
+  const closeSignInModal = () => {
+    setIsSignInModalOpen(false)
+  }
+
+  const openSignUpModal = () => {
+    setIsSignUpModalOpen(true)
+    setIsSignInModalOpen(false)
+  }
+
+  const closeSignUpModal = () => {
+    setIsSignUpModalOpen(false)
+  }
+
+  const switchToSignIn = () => {
+    setIsSignUpModalOpen(false)
+    setIsSignInModalOpen(true)
   }
 
   // Prevent body scroll when mobile menu is open
@@ -120,7 +147,10 @@ export default function Navigation() {
 
             {/* Desktop Sign In Button */}
             <div className="hidden lg:flex items-center">
-              <button className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center font-medium shadow-sm hover:shadow-md transform hover:scale-105">
+              <button
+                onClick={openSignInModal}
+                className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center font-medium shadow-sm hover:shadow-md transform hover:scale-105"
+              >
                 <User className="mr-2" size={16} />
                 Sign In
               </button>
@@ -247,8 +277,8 @@ export default function Navigation() {
             {/* Mobile Sign In Button */}
             <div className="pt-4">
               <button
+                onClick={openSignInModal}
                 className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center font-medium shadow-sm"
-                onClick={closeMobileMenu}
               >
                 <User className="mr-2" size={18} />
                 Sign In
@@ -266,6 +296,12 @@ export default function Navigation() {
           </div>
         </div>
       </div>
+
+      {/* Sign In Modal */}
+      <SignInModal isOpen={isSignInModalOpen} onClose={closeSignInModal} onSwitchToSignUp={openSignUpModal} />
+
+      {/* Sign Up Modal */}
+      <SignUpModal isOpen={isSignUpModalOpen} onClose={closeSignUpModal} onSwitchToSignIn={switchToSignIn} />
     </>
   )
 }
