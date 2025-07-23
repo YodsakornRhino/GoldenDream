@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'GoldenDream',
+  title: 'DreamHome',
   description: 'Created with Group',
   generator: 'GD.com',
 }
