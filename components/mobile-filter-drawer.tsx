@@ -25,7 +25,7 @@ export default function MobileFilterDrawer({
       {/* Mobile Filter Button */}
       <button
         onClick={toggleDrawer}
-        className="lg:hidden fixed bottom-20 left-4 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-30"
+        className="lg:hidden fixed bottom-32 left-4 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-40"
       >
         <Filter size={20} />
       </button>
@@ -52,12 +52,12 @@ export default function MobileFilterDrawer({
                 <input
                   type="number"
                   placeholder="Min"
-                  className="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900 font-medium"
                 />
                 <input
                   type="number"
                   placeholder="Max"
-                  className="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900 font-medium"
                 />
               </div>
             </div>
@@ -69,7 +69,7 @@ export default function MobileFilterDrawer({
                 {["House", "Apartment", "Condo", "Land"].map((type) => (
                   <label key={type} className="flex items-center">
                     <input type="checkbox" className="mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                    <span className="text-base">{type}</span>
+                    <span className="text-base text-gray-900 font-medium">{type}</span>
                   </label>
                 ))}
               </div>
@@ -83,10 +83,10 @@ export default function MobileFilterDrawer({
                   <button
                     key={bedrooms}
                     onClick={() => onBedroomFilter(bedrooms)}
-                    className={`px-4 py-3 border rounded-lg text-sm transition-colors ${
+                    className={`px-4 py-3 border rounded-lg text-sm transition-colors font-medium ${
                       selectedBedrooms === bedrooms
                         ? "bg-blue-50 border-blue-300 text-blue-600"
-                        : "hover:bg-blue-50 hover:border-blue-300"
+                        : "hover:bg-blue-50 hover:border-blue-300 text-gray-900"
                     }`}
                   >
                     {bedrooms}
@@ -98,7 +98,7 @@ export default function MobileFilterDrawer({
             <div className="flex space-x-3">
               <button
                 onClick={toggleDrawer}
-                className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 transition"
+                className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 transition font-semibold"
               >
                 Cancel
               </button>
@@ -107,7 +107,7 @@ export default function MobileFilterDrawer({
                   onApplyFilters()
                   toggleDrawer()
                 }}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
+                className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
               >
                 Apply Filters
               </button>

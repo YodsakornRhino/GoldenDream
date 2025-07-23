@@ -40,7 +40,7 @@ export default function ChatWidget() {
 
       {/* Chat Widget */}
       {isOpen && (
-        <div className="fixed bottom-20 sm:bottom-24 right-2 sm:right-6 w-72 sm:w-80 bg-white rounded-lg shadow-2xl z-40 max-h-96 sm:max-h-none">
+        <div className="fixed bottom-20 sm:bottom-24 right-2 sm:right-6 w-72 sm:w-80 bg-white rounded-lg shadow-2xl z-50 max-h-96 sm:max-h-none">
           <div className="bg-blue-600 text-white p-3 sm:p-4 rounded-t-lg">
             <div className="flex justify-between items-center">
               <h3 className="font-semibold text-sm sm:text-base">Live Chat Support</h3>
@@ -56,7 +56,9 @@ export default function ChatWidget() {
                   <Bot className="text-white" size={14} />
                 </div>
                 <div className="bg-gray-100 p-2 sm:p-3 rounded-lg max-w-xs">
-                  <p className="text-xs sm:text-sm">Hello! How can I help you find your dream property today?</p>
+                  <p className="text-xs sm:text-sm text-gray-900 font-medium">
+                    Hello! How can I help you find your dream property today?
+                  </p>
                 </div>
               </div>
             </div>
@@ -69,11 +71,11 @@ export default function ChatWidget() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="flex-1 px-2 sm:px-3 py-2 border rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="flex-1 px-2 sm:px-3 py-2 border rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-gray-900 font-medium placeholder:text-gray-500"
               />
               <button
                 onClick={handleSendMessage}
-                className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
               >
                 <Send size={14} />
               </button>

@@ -36,11 +36,11 @@ export default function RentPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="relative">
-                <MapPin className="absolute left-3 top-3 text-gray-400" size={20} />
-                <Input placeholder="Location" className="pl-10" />
+                <MapPin className="absolute left-3 top-3 text-gray-400 z-10" size={20} />
+                <Input placeholder="Location" className="pl-10 text-gray-900 placeholder:text-gray-500 font-medium" />
               </div>
               <Select>
-                <SelectTrigger>
+                <SelectTrigger className="text-gray-900 font-medium">
                   <SelectValue placeholder="Property Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -51,7 +51,7 @@ export default function RentPage() {
                 </SelectContent>
               </Select>
               <Select>
-                <SelectTrigger>
+                <SelectTrigger className="text-gray-900 font-medium">
                   <SelectValue placeholder="Monthly Budget" />
                 </SelectTrigger>
                 <SelectContent>
@@ -61,7 +61,7 @@ export default function RentPage() {
                   <SelectItem value="3000+">$3,000+</SelectItem>
                 </SelectContent>
               </Select>
-              <Button className="bg-green-600 hover:bg-green-700">
+              <Button className="bg-green-600 hover:bg-green-700 font-semibold">
                 <Search className="mr-2" size={20} />
                 Search Rentals
               </Button>
