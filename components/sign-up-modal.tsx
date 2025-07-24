@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { User, Mail, Lock, Eye, EyeOff } from "lucide-react"
+import { User, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
+import { toast } from "sonner"
 
 interface SignUpModalProps {
   isOpen: boolean
@@ -19,6 +21,7 @@ interface SignUpModalProps {
 export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignUpModalProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -26,6 +29,8 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
     confirmPassword: "",
     agreeToTerms: false,
   })
+
+  const { signUp } = useAuth()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
@@ -35,22 +40,42 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
     }))
   }
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!")
+      toast.error("Passwords don't match!")
       return
     }
 
     if (!formData.agreeToTerms) {
-      alert("Please agree to the terms and conditions")
+      toast.error("Please agree to the terms and conditions")
       return
     }
 
-    // Handle sign up logic here
-    console.log("Sign up with:", formData)
-    onClose()
+    setLoading(true)
+
+    try {
+      const { error } = await signUp(formData.email, formData.password, formData.username)
+
+      if (error) {
+        toast.error(error.message || "Failed to create account")
+      } else {
+        toast.success("Account created successfully! Please check your email to verify your account.")
+        onClose()
+        setFormData({
+          username: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          agreeToTerms: false,
+        })
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred")
+    } finally {
+      setLoading(false)
+    }
   }
 
   const togglePasswordVisibility = () => {
@@ -88,6 +113,7 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
                 onChange={handleInputChange}
                 className="pl-10 h-11 sm:h-12 text-sm sm:text-base w-full"
                 required
+                disabled={loading}
               />
             </div>
           </div>
@@ -108,6 +134,7 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
                 onChange={handleInputChange}
                 className="pl-10 h-11 sm:h-12 text-sm sm:text-base w-full"
                 required
+                disabled={loading}
               />
             </div>
           </div>
@@ -128,11 +155,13 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
                 onChange={handleInputChange}
                 className="pl-10 pr-10 h-11 sm:h-12 text-sm sm:text-base w-full"
                 required
+                disabled={loading}
               />
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                disabled={loading}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -155,11 +184,13 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
                 onChange={handleInputChange}
                 className="pl-10 pr-10 h-11 sm:h-12 text-sm sm:text-base w-full"
                 required
+                disabled={loading}
               />
               <button
                 type="button"
                 onClick={toggleConfirmPasswordVisibility}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                disabled={loading}
               >
                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -174,6 +205,7 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
               checked={formData.agreeToTerms}
               onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, agreeToTerms: checked as boolean }))}
               className="mt-1 flex-shrink-0"
+              disabled={loading}
             />
             <Label htmlFor="terms" className="text-xs sm:text-sm text-gray-600 leading-relaxed">
               I agree to the{" "}
@@ -191,8 +223,16 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
           <Button
             type="submit"
             className="w-full h-11 sm:h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm sm:text-base transition-colors"
+            disabled={loading}
           >
-            Create Account
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Account...
+              </>
+            ) : (
+              "Create Account"
+            )}
           </Button>
 
           {/* Divider */}
@@ -211,6 +251,7 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
             variant="outline"
             onClick={onSwitchToSignIn}
             className="w-full h-11 sm:h-12 border-blue-600 text-blue-600 hover:bg-blue-50 font-medium bg-transparent text-sm sm:text-base transition-colors"
+            disabled={loading}
           >
             Sign In
           </Button>
@@ -232,6 +273,7 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
               type="button"
               variant="outline"
               className="h-10 sm:h-11 bg-transparent text-sm font-medium transition-colors hover:bg-gray-50"
+              disabled={loading}
             >
               <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" viewBox="0 0 24 24">
                 <path
@@ -258,6 +300,7 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
               type="button"
               variant="outline"
               className="h-10 sm:h-11 bg-transparent text-sm font-medium transition-colors hover:bg-gray-50"
+              disabled={loading}
             >
               <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 fill-[#1877F2]" viewBox="0 0 24 24">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
