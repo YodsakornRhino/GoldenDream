@@ -1,227 +1,307 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Menu, ChevronDown, User, LogOut } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Home, User, ChevronDown } from "lucide-react"
 import SignInModal from "./sign-in-modal"
 import SignUpModal from "./sign-up-modal"
-import { useAuth } from "@/lib/auth-context"
 
 export default function Navigation() {
-  const [isSignInOpen, setIsSignInOpen] = useState(false)
-  const [isSignUpOpen, setIsSignUpOpen] = useState(false)
-  const { user, loading, signOut } = useAuth()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false)
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false)
 
-  const handleSwitchToSignUp = () => {
-    setIsSignInOpen(false)
-    setIsSignUpOpen(true)
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen)
   }
 
-  const handleSwitchToSignIn = () => {
-    setIsSignUpOpen(false)
-    setIsSignInOpen(true)
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false)
   }
 
-  const handleSignOut = async () => {
-    await signOut()
+  const openSignInModal = () => {
+    setIsSignInModalOpen(true)
+    closeMobileMenu()
   }
 
-  const getUserInitials = (email: string) => {
-    return email.charAt(0).toUpperCase()
+  const closeSignInModal = () => {
+    setIsSignInModalOpen(false)
   }
+
+  const openSignUpModal = () => {
+    setIsSignUpModalOpen(true)
+    setIsSignInModalOpen(false)
+  }
+
+  const closeSignUpModal = () => {
+    setIsSignUpModalOpen(false)
+  }
+
+  const switchToSignIn = () => {
+    setIsSignUpModalOpen(false)
+    setIsSignInModalOpen(true)
+  }
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "unset"
+    }
+
+    return () => {
+      document.body.style.overflow = "unset"
+    }
+  }, [isMobileMenuOpen])
 
   return (
     <>
-      <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
+      <nav
+        className={`bg-white shadow-lg sticky top-0 z-50 transition-all duration-300 ${
+          isScrolled ? "shadow-xl backdrop-blur-sm bg-white/95" : ""
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-16 lg:h-18">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">DH</span>
+            <div className="flex items-center flex-shrink-0">
+              <div className="text-xl sm:text-2xl font-bold text-blue-600 flex items-center cursor-pointer hover:text-blue-700 transition-colors">
+                <Home className="mr-2" size={24} />
+                <span className="hidden xs:inline">DreamHome</span>
+                <span className="xs:hidden">DH</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">DreamHome</span>
-            </Link>
+            </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="/buy" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+            {/* Desktop Menu */}
+            <div className="hidden lg:flex items-center space-x-1">
+              <a
+                href="/buy"
+                className="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
+              >
                 Buy
-              </Link>
-              <Link href="/rent" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+              </a>
+              <a
+                href="/rent"
+                className="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
+              >
                 Rent
-              </Link>
-              <Link href="/sell" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+              </a>
+              <a
+                href="/sell"
+                className="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
+              >
                 Sell
-              </Link>
-
-              {/* Services Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center text-gray-700 hover:text-blue-600 font-medium transition-colors">
+              </a>
+              <div className="relative group">
+                <button className="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200 flex items-center">
                   Services
-                  <ChevronDown className="ml-1 h-4 w-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem asChild>
-                    <Link href="/services/property-valuation">Property Valuation</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/services/mortgage-calculator">Mortgage Calculator</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/services/market-reports">Market Reports</Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Link href="/agents" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
-                Agents
-              </Link>
-              <Link href="/blog" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
-                Blog
-              </Link>
-            </div>
-
-            {/* Auth Section */}
-            <div className="hidden md:flex items-center space-x-4">
-              {loading ? (
-                <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
-              ) : user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-blue-600 text-white">
-                          {getUserInitials(user.email || "")}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuItem className="flex flex-col items-start">
-                      <div className="font-medium">{user.user_metadata?.username || "User"}</div>
-                      <div className="text-xs text-muted-foreground">{user.email}</div>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/profile" className="flex items-center">
-                        <User className="mr-2 h-4 w-4" />
-                        Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleSignOut} className="flex items-center">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Button onClick={() => setIsSignInOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-6">
-                  Sign In
-                </Button>
-              )}
-            </div>
-
-            {/* Mobile Menu */}
-            <div className="md:hidden">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Menu className="h-6 w-6" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                  <div className="flex flex-col space-y-4 mt-8">
-                    <Link href="/buy" className="text-lg font-medium text-gray-700 hover:text-blue-600">
-                      Buy Properties
-                    </Link>
-                    <Link href="/rent" className="text-lg font-medium text-gray-700 hover:text-blue-600">
-                      Rent Properties
-                    </Link>
-                    <Link href="/sell" className="text-lg font-medium text-gray-700 hover:text-blue-600">
-                      Sell Property
-                    </Link>
-                    <Link
+                  <ChevronDown className="ml-1" size={16} />
+                </button>
+                {/* Dropdown Menu */}
+                <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
+                  <div className="py-2">
+                    <a
+                      href="/agents"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                    >
+                      Find Agents
+                    </a>
+                    <a
                       href="/services/property-valuation"
-                      className="text-lg font-medium text-gray-700 hover:text-blue-600"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                     >
                       Property Valuation
-                    </Link>
-                    <Link
+                    </a>
+                    <a
                       href="/services/mortgage-calculator"
-                      className="text-lg font-medium text-gray-700 hover:text-blue-600"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                     >
                       Mortgage Calculator
-                    </Link>
-                    <Link
+                    </a>
+                    <a
                       href="/services/market-reports"
-                      className="text-lg font-medium text-gray-700 hover:text-blue-600"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                     >
                       Market Reports
-                    </Link>
-                    <Link href="/agents" className="text-lg font-medium text-gray-700 hover:text-blue-600">
-                      Find Agents
-                    </Link>
-                    <Link href="/blog" className="text-lg font-medium text-gray-700 hover:text-blue-600">
-                      Blog
-                    </Link>
-
-                    <div className="pt-4 border-t">
-                      {loading ? (
-                        <div className="w-full h-10 bg-gray-200 rounded animate-pulse" />
-                      ) : user ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
-                            <Avatar className="h-8 w-8">
-                              <AvatarFallback className="bg-blue-600 text-white">
-                                {getUserInitials(user.email || "")}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="font-medium text-sm">{user.user_metadata?.username || "User"}</div>
-                              <div className="text-xs text-muted-foreground">{user.email}</div>
-                            </div>
-                          </div>
-                          <Button
-                            onClick={handleSignOut}
-                            variant="outline"
-                            className="w-full justify-start bg-transparent"
-                          >
-                            <LogOut className="mr-2 h-4 w-4" />
-                            Sign Out
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          onClick={() => setIsSignInOpen(true)}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          Sign In
-                        </Button>
-                      )}
-                    </div>
+                    </a>
                   </div>
-                </SheetContent>
-              </Sheet>
+                </div>
+              </div>
+              <a
+                href="/blog"
+                className="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
+              >
+                Blog
+              </a>
             </div>
+
+            {/* Desktop Sign In Button */}
+            <div className="hidden lg:flex items-center">
+              <button
+                onClick={openSignInModal}
+                className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center font-medium shadow-sm hover:shadow-md transform hover:scale-105"
+              >
+                <User className="mr-2" size={16} />
+                Sign In
+              </button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              onClick={toggleMobileMenu}
+              aria-label="Toggle mobile menu"
+              aria-expanded={isMobileMenuOpen}
+            >
+              <div className="relative w-6 h-6">
+                <span
+                  className={`absolute block w-6 h-0.5 bg-gray-700 transform transition-all duration-300 ${
+                    isMobileMenuOpen ? "rotate-45 top-3" : "top-1"
+                  }`}
+                />
+                <span
+                  className={`absolute block w-6 h-0.5 bg-gray-700 transform transition-all duration-300 top-3 ${
+                    isMobileMenuOpen ? "opacity-0" : "opacity-100"
+                  }`}
+                />
+                <span
+                  className={`absolute block w-6 h-0.5 bg-gray-700 transform transition-all duration-300 ${
+                    isMobileMenuOpen ? "-rotate-45 top-3" : "top-5"
+                  }`}
+                />
+              </div>
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* Modals */}
-      <SignInModal
-        isOpen={isSignInOpen}
-        onClose={() => setIsSignInOpen(false)}
-        onSwitchToSignUp={handleSwitchToSignUp}
-      />
-      <SignUpModal
-        isOpen={isSignUpOpen}
-        onClose={() => setIsSignUpOpen(false)}
-        onSwitchToSignIn={handleSwitchToSignIn}
-      />
+      {/* Mobile Menu Overlay */}
+      <div
+        className={`lg:hidden fixed inset-0 z-40 transition-all duration-300 ${
+          isMobileMenuOpen ? "visible" : "invisible"
+        }`}
+      >
+        {/* Backdrop */}
+        <div
+          className={`absolute inset-0 bg-black transition-opacity duration-300 ${
+            isMobileMenuOpen ? "opacity-50" : "opacity-0"
+          }`}
+          onClick={closeMobileMenu}
+        />
+
+        {/* Mobile Menu Panel */}
+        <div
+          className={`absolute top-16 left-0 right-0 bg-white border-t shadow-xl transform transition-all duration-300 ${
+            isMobileMenuOpen ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
+          }`}
+        >
+          <div className="px-4 py-6 space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            {/* Mobile Navigation Links */}
+            <a
+              href="/buy"
+              className="block text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 border-b border-gray-100"
+              onClick={closeMobileMenu}
+            >
+              Buy Properties
+            </a>
+            <a
+              href="/rent"
+              className="block text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 border-b border-gray-100"
+              onClick={closeMobileMenu}
+            >
+              Rent Properties
+            </a>
+            <a
+              href="/sell"
+              className="block text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 border-b border-gray-100"
+              onClick={closeMobileMenu}
+            >
+              Sell Property
+            </a>
+
+            {/* Mobile Services Section */}
+            <div className="border-b border-gray-100">
+              <div className="py-3 px-4">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Services</h3>
+                <div className="space-y-2 ml-2">
+                  <a
+                    href="/agents"
+                    className="block text-gray-600 py-2 px-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
+                    onClick={closeMobileMenu}
+                  >
+                    Find Agents
+                  </a>
+                  <a
+                    href="/services/property-valuation"
+                    className="block text-gray-600 py-2 px-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
+                    onClick={closeMobileMenu}
+                  >
+                    Property Valuation
+                  </a>
+                  <a
+                    href="/services/mortgage-calculator"
+                    className="block text-gray-600 py-2 px-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
+                    onClick={closeMobileMenu}
+                  >
+                    Mortgage Calculator
+                  </a>
+                  <a
+                    href="/services/market-reports"
+                    className="block text-gray-600 py-2 px-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
+                    onClick={closeMobileMenu}
+                  >
+                    Market Reports
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <a
+              href="/blog"
+              className="block text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 border-b border-gray-100"
+              onClick={closeMobileMenu}
+            >
+              Blog
+            </a>
+
+            {/* Mobile Sign In Button */}
+            <div className="pt-4">
+              <button
+                onClick={openSignInModal}
+                className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center font-medium shadow-sm"
+              >
+                <User className="mr-2" size={18} />
+                Sign In
+              </button>
+            </div>
+
+            {/* Mobile Contact Info */}
+            <div className="pt-6 border-t border-gray-200 mt-6">
+              <div className="text-center space-y-2">
+                <p className="text-sm text-gray-500">Need help?</p>
+                <p className="text-lg font-semibold text-blue-600">(555) 123-4567</p>
+                <p className="text-sm text-gray-500">info@dreamhome.com</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sign In Modal */}
+      <SignInModal isOpen={isSignInModalOpen} onClose={closeSignInModal} onSwitchToSignUp={openSignUpModal} />
+
+      {/* Sign Up Modal */}
+      <SignUpModal isOpen={isSignUpModalOpen} onClose={closeSignUpModal} onSwitchToSignIn={switchToSignIn} />
     </>
   )
 }
