@@ -1,17 +1,10 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { AuthProvider } from "@/lib/auth-context"
-import { Toaster } from "@/components/ui/sonner"
-
-const inter = Inter({ subsets: ["latin"] })
+import type { Metadata } from 'next'
+import './globals.css'
 
 export const metadata: Metadata = {
-  title: "DreamHome - Find Your Perfect Property",
-  description:
-    "Discover amazing properties for sale and rent. Your dream home awaits with DreamHome real estate platform.",
-  generator: "DreamHome Real Estate",
+  title: 'DreamHome',
+  description: 'Created with Group',
+  generator: 'GD.com',
 }
 
 export default function RootLayout({
@@ -21,12 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <AuthProvider>
-          {children}
-          <Toaster position="top-right" />
-        </AuthProvider>
-      </body>
+      <body>{children}</body>
     </html>
   )
 }
