@@ -1,36 +1,24 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
-import type { User } from "@supabase/supabase-js"
+import type { User, AuthError } from "@supabase/supabase-js"
 import { supabase } from "./supabase"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 interface AuthContextType {
   user: User | null
   loading: boolean
+  signUp: (email: string, password: string, username: string) => Promise<void>
+  signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  loading: true,
-  signOut: async () => {},
-})
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider")
-  }
-  return context
-}
-
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const { toast } = useToast()
 
   useEffect(() => {
     // Get initial session
@@ -50,33 +38,77 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null)
       setLoading(false)
-
-      if (event === "SIGNED_IN") {
-        toast({
-          title: "Welcome!",
-          description: "You have successfully signed in.",
-        })
-      } else if (event === "SIGNED_OUT") {
-        toast({
-          title: "Goodbye!",
-          description: "You have been signed out.",
-        })
-      }
     })
 
     return () => subscription.unsubscribe()
-  }, [toast])
+  }, [])
 
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
+  const signUp = async (email: string, password: string, username: string) => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+          },
+        },
       })
+
+      if (error) throw error
+
+      toast.success("Account created! Please check your email to verify your account.")
+    } catch (error) {
+      const authError = error as AuthError
+      toast.error(authError.message || "Failed to create account")
+      throw error
     }
   }
 
-  return <AuthContext.Provider value={{ user, loading, signOut }}>{children}</AuthContext.Provider>
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) throw error
+
+      toast.success("Welcome back!")
+    } catch (error) {
+      const authError = error as AuthError
+      toast.error(authError.message || "Failed to sign in")
+      throw error
+    }
+  }
+
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      toast.success("Signed out successfully")
+    } catch (error) {
+      const authError = error as AuthError
+      toast.error(authError.message || "Failed to sign out")
+      throw error
+    }
+  }
+
+  const value = {
+    user,
+    loading,
+    signUp,
+    signIn,
+    signOut,
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider")
+  }
+  return context
 }
