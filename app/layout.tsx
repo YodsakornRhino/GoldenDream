@@ -1,8 +1,13 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
+import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/lib/auth-context"
 import { Toaster } from "@/components/ui/sonner"
+import Navigation from "@/components/navigation"
+import Footer from "@/components/footer"
+
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "DreamHome - Find Your Perfect Property",
@@ -11,7 +16,11 @@ export const metadata: Metadata = {
   generator: "DreamHome Real Estate",
   keywords: ["real estate", "properties", "homes", "apartments", "buy", "rent", "sell"],
   authors: [{ name: "DreamHome Team" }],
-  viewport: "width=device-width, initial-scale=1",
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 }
 
 export default function RootLayout({
@@ -21,9 +30,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-background font-sans antialiased">
+      <body className={`${inter.className} min-h-screen bg-background font-sans antialiased`}>
         <AuthProvider>
-          {children}
+          <div className="min-h-screen flex flex-col">
+            <Navigation />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
           <Toaster
             position="top-right"
             toastOptions={{
