@@ -1,15 +1,20 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Home, User, ChevronDown } from "lucide-react"
+import { Home, User, ChevronDown, LogOut } from "lucide-react"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
 import SignInModal from "./sign-in-modal"
 import SignUpModal from "./sign-up-modal"
+import { useAuth } from "@/lib/auth-context"
 
 export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false)
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false)
+  const { user, loading, signOut } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,6 +54,14 @@ export default function Navigation() {
   const switchToSignIn = () => {
     setIsSignUpModalOpen(false)
     setIsSignInModalOpen(true)
+  }
+
+  const handleSignOut = async () => {
+    await signOut()
+  }
+
+  const getUserInitials = (email: string) => {
+    return email.charAt(0).toUpperCase()
   }
 
   // Prevent body scroll when mobile menu is open
@@ -145,15 +158,41 @@ export default function Navigation() {
               </a>
             </div>
 
-            {/* Desktop Sign In Button */}
+            {/* Desktop Auth Section */}
             <div className="hidden lg:flex items-center">
-              <button
-                onClick={openSignInModal}
-                className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center font-medium shadow-sm hover:shadow-md transform hover:scale-105"
-              >
-                <User className="mr-2" size={16} />
-                Sign In
-              </button>
+              {loading ? (
+                <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+              ) : user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-blue-600 text-white">
+                          {getUserInitials(user.email || "")}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuItem className="flex flex-col items-start">
+                      <div className="font-medium">{user.user_metadata?.username || "User"}</div>
+                      <div className="text-xs text-muted-foreground">{user.email}</div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleSignOut} className="flex items-center">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <button
+                  onClick={openSignInModal}
+                  className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center font-medium shadow-sm hover:shadow-md transform hover:scale-105"
+                >
+                  <User className="mr-2" size={16} />
+                  Sign In
+                </button>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -274,15 +313,37 @@ export default function Navigation() {
               Blog
             </a>
 
-            {/* Mobile Sign In Button */}
+            {/* Mobile Auth Section */}
             <div className="pt-4">
-              <button
-                onClick={openSignInModal}
-                className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center font-medium shadow-sm"
-              >
-                <User className="mr-2" size={18} />
-                Sign In
-              </button>
+              {loading ? (
+                <div className="w-full h-10 bg-gray-200 rounded animate-pulse" />
+              ) : user ? (
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-blue-600 text-white">
+                        {getUserInitials(user.email || "")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium text-sm">{user.user_metadata?.username || "User"}</div>
+                      <div className="text-xs text-muted-foreground">{user.email}</div>
+                    </div>
+                  </div>
+                  <Button onClick={handleSignOut} variant="outline" className="w-full justify-start bg-transparent">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  onClick={openSignInModal}
+                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center font-medium shadow-sm"
+                >
+                  <User className="mr-2" size={18} />
+                  Sign In
+                </button>
+              )}
             </div>
 
             {/* Mobile Contact Info */}
