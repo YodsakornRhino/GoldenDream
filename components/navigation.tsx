@@ -102,41 +102,7 @@ export default function Navigation() {
               >
                 Sell
               </a>
-              <div className="relative group">
-                <button className="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200 flex items-center">
-                  Services
-                  <ChevronDown className="ml-1" size={16} />
-                </button>
-                {/* Dropdown Menu */}
-                <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
-                  <div className="py-2">
-                    <a
-                      href="/agents"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                    >
-                      Find Agents
-                    </a>
-                    <a
-                      href="/services/property-valuation"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                    >
-                      Property Valuation
-                    </a>
-                    <a
-                      href="/services/mortgage-calculator"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                    >
-                      Mortgage Calculator
-                    </a>
-                    <a
-                      href="/services/market-reports"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                    >
-                      Market Reports
-                    </a>
-                  </div>
-                </div>
-              </div>
+             
               <a
                 href="/blog"
                 className="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
