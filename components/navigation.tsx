@@ -1,51 +1,57 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Home, User, ChevronDown } from "lucide-react"
+import { useEffect, useState } from "react"
+import type { User as SupabaseUser } from "@supabase/supabase-js"
+import { Home, UserIcon, LogOut } from "lucide-react"
 import SignInModal from "./sign-in-modal"
 import SignUpModal from "./sign-up-modal"
+import { getSupabaseClient } from "@/lib/supabase-client"
+import { useToast } from "@/hooks/use-toast"
 
 export default function Navigation() {
+  const supabase = getSupabaseClient()
+  const { toast } = useToast()
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false)
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false)
+  const [user, setUser] = useState<SupabaseUser | null>(null)
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10)
-    }
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 10)
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen)
-  }
+  // Load user, update on auth changes
+  useEffect(() => {
+    let active = true
+    supabase.auth.getUser().then(({ data }) => {
+      if (!active) return
+      setUser(data.user ?? null)
+    })
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+    return () => {
+      active = false
+      sub.subscription.unsubscribe()
+    }
+  }, [supabase])
 
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false)
-  }
-
+  const toggleMobileMenu = () => setIsMobileMenuOpen((s) => !s)
+  const closeMobileMenu = () => setIsMobileMenuOpen(false)
   const openSignInModal = () => {
     setIsSignInModalOpen(true)
     closeMobileMenu()
   }
-
-  const closeSignInModal = () => {
-    setIsSignInModalOpen(false)
-  }
-
+  const closeSignInModal = () => setIsSignInModalOpen(false)
   const openSignUpModal = () => {
     setIsSignUpModalOpen(true)
     setIsSignInModalOpen(false)
   }
-
-  const closeSignUpModal = () => {
-    setIsSignUpModalOpen(false)
-  }
-
+  const closeSignUpModal = () => setIsSignUpModalOpen(false)
   const switchToSignIn = () => {
     setIsSignUpModalOpen(false)
     setIsSignInModalOpen(true)
@@ -53,16 +59,25 @@ export default function Navigation() {
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = "unset"
-    }
-
+    if (isMobileMenuOpen) document.body.style.overflow = "hidden"
+    else document.body.style.overflow = "unset"
     return () => {
       document.body.style.overflow = "unset"
     }
   }, [isMobileMenuOpen])
+
+  const displayName =
+    (user?.user_metadata?.username as string) ||
+    (user?.user_metadata?.full_name as string) ||
+    user?.email?.split("@")[0] ||
+    "Account"
+
+  const signOut = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    toast({ title: "Signed out", description: "You have been signed out." })
+    closeMobileMenu()
+  }
 
   return (
     <>
@@ -75,11 +90,14 @@ export default function Navigation() {
           <div className="flex justify-between items-center h-16 lg:h-18">
             {/* Logo */}
             <div className="flex items-center flex-shrink-0">
-              <div className="text-xl sm:text-2xl font-bold text-blue-600 flex items-center cursor-pointer hover:text-blue-700 transition-colors">
+              <a
+                href="/"
+                className="text-xl sm:text-2xl font-bold text-blue-600 flex items-center cursor-pointer hover:text-blue-700 transition-colors"
+              >
                 <Home className="mr-2" size={24} />
                 <span className="hidden xs:inline">DreamHome</span>
                 <span className="xs:hidden">DH</span>
-              </div>
+              </a>
             </div>
 
             {/* Desktop Menu */}
@@ -102,7 +120,6 @@ export default function Navigation() {
               >
                 Sell
               </a>
-             
               <a
                 href="/blog"
                 className="text-gray-700 hover:text-blue-600 font-medium px-4 py-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
@@ -111,15 +128,30 @@ export default function Navigation() {
               </a>
             </div>
 
-            {/* Desktop Sign In Button */}
+            {/* Desktop Right */}
             <div className="hidden lg:flex items-center">
-              <button
-                onClick={openSignInModal}
-                className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center font-medium shadow-sm hover:shadow-md transform hover:scale-105"
-              >
-                <User className="mr-2" size={16} />
-                Sign In
-              </button>
+              {user ? (
+                <div className="flex items-center gap-3">
+                  <div className="px-3 py-2 rounded-lg border text-sm">
+                    <span className="font-medium">{displayName}</span>{" "}
+                    <span className="text-gray-500">@ {user.email}</span>
+                  </div>
+                  <button
+                    onClick={signOut}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"
+                  >
+                    <LogOut size={16} /> Sign out
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={openSignInModal}
+                  className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center font-medium shadow-sm hover:shadow-md transform hover:scale-105"
+                >
+                  <UserIcon className="mr-2" size={16} />
+                  Sign In
+                </button>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -172,6 +204,31 @@ export default function Navigation() {
           }`}
         >
           <div className="px-4 py-6 space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            {/* Account block */}
+            {user ? (
+              <div className="mb-4 rounded-xl border border-gray-100 p-4 bg-gray-50">
+                <div className="text-sm">
+                  <div className="font-semibold">{displayName}</div>
+                  <div className="text-gray-500">{user.email}</div>
+                </div>
+                <div className="mt-3 flex gap-3">
+                  <a
+                    href="/"
+                    onClick={closeMobileMenu}
+                    className="flex-1 text-center text-sm font-medium px-3 py-2 rounded-lg border hover:bg-gray-100"
+                  >
+                    Home
+                  </a>
+                  <button
+                    onClick={signOut}
+                    className="flex-1 text-center text-sm font-medium px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
             {/* Mobile Navigation Links */}
             <a
               href="/buy"
@@ -195,7 +252,6 @@ export default function Navigation() {
               Sell Property
             </a>
 
-            {/* Mobile Services Section */}
             <div className="border-b border-gray-100">
               <div className="py-3 px-4">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Services</h3>
@@ -240,16 +296,18 @@ export default function Navigation() {
               Blog
             </a>
 
-            {/* Mobile Sign In Button */}
-            <div className="pt-4">
-              <button
-                onClick={openSignInModal}
-                className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center font-medium shadow-sm"
-              >
-                <User className="mr-2" size={18} />
-                Sign In
-              </button>
-            </div>
+            {/* Mobile Sign In Button (only when signed out) */}
+            {!user && (
+              <div className="pt-4">
+                <button
+                  onClick={openSignInModal}
+                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center justify-center font-medium shadow-sm"
+                >
+                  <UserIcon className="mr-2" size={18} />
+                  Sign In
+                </button>
+              </div>
+            )}
 
             {/* Mobile Contact Info */}
             <div className="pt-6 border-t border-gray-200 mt-6">
@@ -263,10 +321,8 @@ export default function Navigation() {
         </div>
       </div>
 
-      {/* Sign In Modal */}
+      {/* Modals */}
       <SignInModal isOpen={isSignInModalOpen} onClose={closeSignInModal} onSwitchToSignUp={openSignUpModal} />
-
-      {/* Sign Up Modal */}
       <SignUpModal isOpen={isSignUpModalOpen} onClose={closeSignUpModal} onSwitchToSignIn={switchToSignIn} />
     </>
   )
