@@ -252,42 +252,6 @@ export default function Navigation() {
               Sell Property
             </a>
 
-            <div className="border-b border-gray-100">
-              <div className="py-3 px-4">
-                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Services</h3>
-                <div className="space-y-2 ml-2">
-                  <a
-                    href="/agents"
-                    className="block text-gray-600 py-2 px-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
-                    onClick={closeMobileMenu}
-                  >
-                    Find Agents
-                  </a>
-                  <a
-                    href="/services/property-valuation"
-                    className="block text-gray-600 py-2 px-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
-                    onClick={closeMobileMenu}
-                  >
-                    Property Valuation
-                  </a>
-                  <a
-                    href="/services/mortgage-calculator"
-                    className="block text-gray-600 py-2 px-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
-                    onClick={closeMobileMenu}
-                  >
-                    Mortgage Calculator
-                  </a>
-                  <a
-                    href="/services/market-reports"
-                    className="block text-gray-600 py-2 px-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
-                    onClick={closeMobileMenu}
-                  >
-                    Market Reports
-                  </a>
-                </div>
-              </div>
-            </div>
-
             <a
               href="/blog"
               className="block text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 border-b border-gray-100"
