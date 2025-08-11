@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
-import { Home, LogOut, Menu, UserIcon, X } from "lucide-react"
+import { Home, UserIcon, LogOut, Menu, X } from "lucide-react"
 import SignInModal from "./sign-in-modal"
 import SignUpModal from "./sign-up-modal"
 import { getSupabaseClient } from "@/lib/supabase-client"
@@ -15,10 +15,6 @@ declare global {
   }
 }
 
-/**
- * Navigation พร้อมกันซ้ำ (singleton guard) เพื่อหลีกเลี่ยงการเรนเดอร์ซ้ำ
- * - ถ้ามี instance อื่นในหน้าอยู่แล้ว จะไม่เรนเดอร์ซ้ำ
- */
 export default function Navigation() {
   const supabase = getSupabaseClient()
   const { toast } = useToast()
@@ -30,7 +26,7 @@ export default function Navigation() {
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false)
   const [user, setUser] = useState<SupabaseUser | null>(null)
 
-  // โลโก้คือปุ่ม Home; เอา "Home" ออกไม่ให้ซ้ำ
+  // Logo = Home button; remove "Home" item to avoid duplication
   const links = [
     { href: "/buy", label: "Buy" },
     { href: "/rent", label: "Rent" },
@@ -38,7 +34,7 @@ export default function Navigation() {
     { href: "/blog", label: "Blog" },
   ]
 
-  // กันซ้ำ: อนุญาตเรนเดอร์เฉพาะ instance แรก
+  // Singleton guard to prevent duplicate Navigation rendering
   useEffect(() => {
     if (typeof window === "undefined") return
     if (window.__DREAMHOME_NAV_MOUNTED) {
@@ -48,7 +44,6 @@ export default function Navigation() {
     window.__DREAMHOME_NAV_MOUNTED = true
     setAllowRender(true)
     return () => {
-      // ปล่อย flag เมื่อ unmount
       if (window.__DREAMHOME_NAV_MOUNTED) window.__DREAMHOME_NAV_MOUNTED = false
     }
   }, [])
@@ -59,7 +54,7 @@ export default function Navigation() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  // โหลด user + subscribe auth changes
+  // Load user + listen auth changes
   useEffect(() => {
     let active = true
     supabase.auth.getUser().then(({ data }) => {
@@ -75,7 +70,7 @@ export default function Navigation() {
     }
   }, [supabase])
 
-  // Lock body scroll เมื่อเปิด mobile menu
+  // Lock page scroll when mobile menu open; menu itself is scrollable
   useEffect(() => {
     document.body.style.overflow = isMobileMenuOpen ? "hidden" : "unset"
     return () => {
@@ -119,7 +114,7 @@ export default function Navigation() {
   return (
     <>
       <header
-        className={`sticky top-0 z-40 w-full border-b border-gray-200 bg-white/90 backdrop-blur ${
+        className={`sticky top-0 z-50 w-full border-b border-gray-200 bg-white/90 backdrop-blur ${
           isScrolled ? "shadow-xl" : ""
         }`}
       >
@@ -182,70 +177,92 @@ export default function Navigation() {
         </div>
       </header>
 
-      {/* Mobile drawer */}
-      {isMobileMenuOpen && (
-        <div className="border-t border-gray-200 bg-white md:hidden">
-          <nav className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-            <ul className="flex flex-col gap-2">
-              {links.map((l) => (
-                <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    className="block rounded-md px-3 py-2 text-gray-700 hover:bg-gray-50"
-                    onClick={closeMobileMenu}
-                  >
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+      {/*
+Mobile overlay + Drawer (scrollable with slide animation)
+*/}
+      <>
+        {/* Backdrop */}
+        <div
+          className={`fixed inset-0 z-40 md:hidden transition-opacity duration-300 ${isMobileMenuOpen ? "opacity-100 pointer-events-auto bg-black/40" : "opacity-0 pointer-events-none bg-black/0"}`}
+          onClick={closeMobileMenu}
+          aria-hidden={!isMobileMenuOpen}
+        />
+        {/* Drawer */}
+        <div
+          className={`fixed inset-x-0 top-16 bottom-0 z-50 md:hidden bg-white border-t will-change-transform transition-transform duration-300 ease-out ${isMobileMenuOpen ? "translate-y-0" : "translate-y-full"}`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile navigation"
+          aria-hidden={!isMobileMenuOpen}
+        >
+          <div className="mx-auto flex h-full max-w-7xl flex-col overflow-y-auto px-4 py-3 sm:px-6 lg:px-8 pb-[calc(16px+env(safe-area-inset-bottom))]">
+            {/* Nav links */}
+            <nav>
+              <ul className="flex flex-col gap-2">
+                {links.map((l) => (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      className="block rounded-md px-3 py-2 text-gray-700 hover:bg-gray-50"
+                      onClick={closeMobileMenu}
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
 
-          {/* Account block */}
-          {user ? (
-            <div className="mb-4 rounded-xl border border-gray-100 p-4 bg-gray-50">
-              <div className="text-sm">
-                <div className="font-semibold">{displayName}</div>
-                <div className="text-gray-500">{user.email}</div>
+            {/* Account block */}
+            {user ? (
+              <div className="mt-4 rounded-xl border border-gray-100 p-4 bg-gray-50">
+                <div className="text-sm">
+                  <div className="font-semibold">
+                    {(user.user_metadata?.full_name as string) ||
+                      (user.user_metadata?.username as string) ||
+                      displayName}
+                  </div>
+                  <div className="text-gray-500">{user.email}</div>
+                </div>
+                <div className="mt-3 flex gap-3">
+                  <Link
+                    href="/"
+                    onClick={closeMobileMenu}
+                    className="flex-1 text-center text-sm font-medium px-3 py-2 rounded-lg border hover:bg-gray-100"
+                  >
+                    Home
+                  </Link>
+                  <button
+                    onClick={signOut}
+                    className="flex-1 text-center text-sm font-medium px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100"
+                  >
+                    Sign out
+                  </button>
+                </div>
               </div>
-              <div className="mt-3 flex gap-3">
-                <Link
-                  href="/"
-                  onClick={closeMobileMenu}
-                  className="flex-1 text-center text-sm font-medium px-3 py-2 rounded-lg border hover:bg-gray-100"
-                >
-                  Home
-                </Link>
+            ) : (
+              <div className="pt-3">
                 <button
-                  onClick={signOut}
-                  className="flex-1 text-center text-sm font-medium px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100"
+                  onClick={openSignInModal}
+                  className="w-full bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition-all duration-200 flex items-center justify-center font-medium shadow-sm"
                 >
-                  Sign out
+                  <UserIcon className="mr-2" size={18} />
+                  Sign In
                 </button>
               </div>
-            </div>
-          ) : (
-            <div className="pt-2 px-4 pb-4">
-              <button
-                onClick={openSignInModal}
-                className="w-full bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition-all duration-200 flex items-center justify-center font-medium shadow-sm"
-              >
-                <UserIcon className="mr-2" size={18} />
-                Sign In
-              </button>
-            </div>
-          )}
+            )}
 
-          {/* Mobile Contact Info */}
-          <div className="pt-6 border-t border-gray-200 mt-6">
-            <div className="text-center space-y-2">
-              <p className="text-sm text-gray-500">Need help?</p>
-              <p className="text-lg font-semibold text-emerald-700">(555) 123-4567</p>
-              <p className="text-sm text-gray-500">info@dreamhome.com</p>
+            {/* Contact info */}
+            <div className="mt-6 border-t border-gray-200 pt-6">
+              <div className="text-center space-y-2">
+                <p className="text-sm text-gray-500">Need help?</p>
+                <p className="text-lg font-semibold text-emerald-700">(555) 123-4567</p>
+                <p className="text-sm text-gray-500">info@dreamhome.com</p>
+              </div>
             </div>
           </div>
         </div>
-      )}
+      </>
 
       {/* Modals */}
       <SignInModal isOpen={isSignInModalOpen} onClose={closeSignInModal} onSwitchToSignUp={openSignUpModal} />
