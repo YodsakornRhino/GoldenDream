@@ -1,17 +1,47 @@
+"use client"
+
 import Link from "next/link"
 import { Home, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin } from "lucide-react"
+import { useEffect, useState } from "react"
 
+declare global {
+  interface Window {
+    __DREAMHOME_FOOTER_MOUNTED?: boolean
+  }
+}
+
+/**
+ * Footer พร้อมกันซ้ำ (singleton guard) เพื่อหลีกเลี่ยงการเรนเดอร์ซ้ำ
+ * - ถ้ามี instance อื่นในหน้าอยู่แล้ว จะไม่เรนเดอร์ซ้ำ
+ */
 export default function Footer() {
+  const [allowRender, setAllowRender] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    if (window.__DREAMHOME_FOOTER_MOUNTED) {
+      setAllowRender(false)
+      return
+    }
+    window.__DREAMHOME_FOOTER_MOUNTED = true
+    setAllowRender(true)
+    return () => {
+      if (window.__DREAMHOME_FOOTER_MOUNTED) window.__DREAMHOME_FOOTER_MOUNTED = false
+    }
+  }, [])
+
+  if (!allowRender) return null
+
   return (
     <footer className="bg-gray-800 text-white py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div>
-            <div className="text-2xl font-bold mb-4 flex items-center">
+            <Link href="/" className="text-2xl font-bold mb-4 flex items-center hover:opacity-90">
               <Home className="mr-2" size={24} />
               DreamHome
-            </div>
+            </Link>
             <p className="text-gray-400 mb-4">
               Your trusted partner in finding the perfect property. We make real estate simple and accessible for
               everyone.
@@ -57,7 +87,6 @@ export default function Footer() {
                   Sell Property
                 </Link>
               </li>
-              {/* Removed: Find Agents */}
             </ul>
           </div>
 

@@ -1,35 +1,36 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
-import ScrollToTop from "@/components/scroll-to-top"
+import type { ReactNode } from "react"
+import { Suspense } from "react"
 import "./globals.css"
+import Navigation from "@/components/navigation"
+import Footer from "@/components/footer"
+import { Toaster } from "@/components/ui/toaster"
+import ScrollToTop from "@/components/scroll-to-top"
 
-export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
-  generator: "v0.dev",
+export const metadata = {
+  title: "DreamHome",
+  description: "Find, list, and manage properties with DreamHome.",
+    generator: 'v0.dev'
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <style>{`
-html {
-  font-family: ${GeistSans.style.fontFamily};
-  --font-sans: ${GeistSans.variable};
-  --font-mono: ${GeistMono.variable};
-}
-        `}</style>
-      </head>
-      <body>
-        <ScrollToTop />
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <body className="min-h-screen bg-white text-gray-900 antialiased">
+        {/* Navigation แสดงจาก layout ที่เดียว */}
+        <Navigation />
+
+        {/* เลื่อนขึ้นบนสุดอัตโนมัติเมื่อเปลี่ยนเส้นทาง */}
+        <Suspense fallback={null}>
+          <ScrollToTop />
+        </Suspense>
+
+        <main className="min-h-[60vh]">{children}</main>
+
+        {/* Footer แสดงจาก layout ที่เดียว */}
+        <Footer />
+
+        {/* Global toasts */}
+        <Toaster />
       </body>
     </html>
   )
