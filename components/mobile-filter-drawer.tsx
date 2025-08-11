@@ -25,9 +25,10 @@ export default function MobileFilterDrawer({
       {/* Mobile Filter Button */}
       <button
         onClick={toggleDrawer}
-        className="lg:hidden fixed bottom-32 left-4 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-40"
+        className="lg:hidden fixed bottom-6 left-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-40"
+        aria-label="Open filters"
       >
-        <Filter size={20} />
+        <Filter size={24} />
       </button>
 
       {/* Mobile Filter Drawer */}
