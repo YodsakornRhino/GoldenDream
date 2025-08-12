@@ -1,26 +1,19 @@
-import { NextResponse } from "next/server"
 import { createSupabaseServerClient } from "@/lib/supabase-server"
+import { type NextRequest, NextResponse } from "next/server"
 
-// Exchanges the OAuth/email confirmation code for a session, then redirects.
-// Based on Supabase's App Router example. [^1]
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get("code")
-
-  let next = searchParams.get("next") ?? "/"
-  if (!next.startsWith("/")) next = "/"
+  const next = searchParams.get("next") ?? "/"
 
   if (code) {
     const supabase = createSupabaseServerClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      const forwardedHost = (request.headers.get("x-forwarded-host") || "").trim()
-      const isLocal = process.env.NODE_ENV === "development"
-      if (isLocal) return NextResponse.redirect(`${origin}${next}`)
-      if (forwardedHost) return NextResponse.redirect(`https://${forwardedHost}${next}`)
       return NextResponse.redirect(`${origin}${next}`)
     }
   }
 
+  // Return the user to an error page with instructions
   return NextResponse.redirect(`${origin}/auth/auth-code-error`)
 }

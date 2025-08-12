@@ -6,7 +6,7 @@
 // NEXT_PUBLIC_SUPABASE_URL
 // NEXT_PUBLIC_SUPABASE_ANON_KEY
 //
-// Client-side variables must be prefixed with NEXT_PUBLIC to be accessible in the browser. [^1]
+// Client-side variables must be prefixed with NEXT_PUBLIC to be accessible in the browser.
 
 const DEFAULT_URL = "https://gjucezhoahgooomrhugj.supabase.co"
 const DEFAULT_ANON =

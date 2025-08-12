@@ -32,17 +32,37 @@ export default function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignI
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    const { error } = await supabase.auth.signInWithPassword({
-      email: formData.email.trim(),
-      password: formData.password,
-    })
-    setIsSubmitting(false)
-    if (error) {
-      toast({ title: "Sign in failed", description: error.message, variant: "destructive" })
-      return
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email.trim(),
+        password: formData.password,
+      })
+
+      if (error) {
+        console.error("Sign in error:", error)
+        toast({
+          title: "Sign in failed",
+          description: error.message || "Unable to sign in. Please check your credentials.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (data.user) {
+        toast({ title: "Signed in", description: "Welcome back to DreamHome!" })
+        onClose()
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      toast({
+        title: "Connection error",
+        description: "Unable to connect to authentication service. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
-    toast({ title: "Signed in", description: "Welcome back to DreamHome!" })
-    onClose()
   }
 
   const handleForgotPassword = async () => {
@@ -50,29 +70,65 @@ export default function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignI
       toast({ title: "Enter your email", description: "Please enter your email above first." })
       return
     }
-    const { error } = await supabase.auth.resetPasswordForEmail(formData.email.trim(), {
-      redirectTo: `${window.location.origin}/auth/update-password`,
-    })
-    if (error) {
-      toast({ title: "Reset failed", description: error.message, variant: "destructive" })
-      return
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email.trim(), {
+        redirectTo: `${window.location.origin}/auth/update-password`,
+      })
+
+      if (error) {
+        toast({ title: "Reset failed", description: error.message, variant: "destructive" })
+        return
+      }
+
+      toast({ title: "Password reset sent", description: "Check your inbox for the reset link." })
+    } catch (error) {
+      toast({
+        title: "Connection error",
+        description: "Unable to send reset email. Please try again.",
+        variant: "destructive",
+      })
     }
-    toast({ title: "Password reset sent", description: "Check your inbox for the reset link." })
   }
 
   const togglePasswordVisibility = () => setShowPassword((v) => !v)
 
   const signInWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    })
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      })
+
+      if (error) {
+        toast({ title: "OAuth error", description: error.message, variant: "destructive" })
+      }
+    } catch (error) {
+      toast({
+        title: "Connection error",
+        description: "Unable to connect to Google. Please try again.",
+        variant: "destructive",
+      })
+    }
   }
+
   const signInWithFacebook = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: "facebook",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    })
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "facebook",
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      })
+
+      if (error) {
+        toast({ title: "OAuth error", description: error.message, variant: "destructive" })
+      }
+    } catch (error) {
+      toast({
+        title: "Connection error",
+        description: "Unable to connect to Facebook. Please try again.",
+        variant: "destructive",
+      })
+    }
   }
 
   return (

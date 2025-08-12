@@ -6,8 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { User, Mail, Lock, Eye, EyeOff } from "lucide-react"
+import { Mail, Lock, Eye, EyeOff, User, Phone } from "lucide-react"
 import { getSupabaseClient } from "@/lib/supabase-client"
 import { useToast } from "@/hooks/use-toast"
 
@@ -25,59 +24,130 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
-    username: "",
+    fullName: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
-    agreeToTerms: false,
   })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
-    setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }))
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (formData.password !== formData.confirmPassword) {
-      toast({ title: "Passwords do not match", variant: "destructive" })
+      toast({
+        title: "Passwords don't match",
+        description: "Please make sure both passwords are identical.",
+        variant: "destructive",
+      })
       return
     }
-    if (!formData.agreeToTerms) {
-      toast({ title: "Please agree to the terms and conditions", variant: "destructive" })
+
+    if (formData.password.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      })
       return
     }
 
     setIsSubmitting(true)
-    const { data, error } = await supabase.auth.signUp({
-      email: formData.email.trim(),
-      password: formData.password,
-      options: {
-        data: { username: formData.username.trim() },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
-    setIsSubmitting(false)
 
-    if (error) {
-      toast({ title: "Sign up failed", description: error.message, variant: "destructive" })
-      return
-    }
-
-    if (!data.session) {
-      toast({
-        title: "Check your email",
-        description: "We sent a confirmation link to complete your registration.",
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email.trim(),
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.fullName.trim(),
+            phone: formData.phone.trim(),
+          },
+        },
       })
-    } else {
-      toast({ title: "Account created", description: "You're now signed in." })
-    }
 
-    onClose()
+      if (error) {
+        console.error("Sign up error:", error)
+        toast({
+          title: "Sign up failed",
+          description: error.message || "Unable to create account. Please try again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      if (data.user) {
+        if (data.user.email_confirmed_at) {
+          toast({
+            title: "Account created",
+            description: "Welcome to DreamHome! You're now signed in.",
+          })
+          onClose()
+        } else {
+          toast({
+            title: "Check your email",
+            description: "We've sent you a confirmation link to complete your registration.",
+          })
+          onClose()
+        }
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      toast({
+        title: "Connection error",
+        description: "Unable to connect to authentication service. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const togglePasswordVisibility = () => setShowPassword((v) => !v)
   const toggleConfirmPasswordVisibility = () => setShowConfirmPassword((v) => !v)
+
+  const signUpWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      })
+
+      if (error) {
+        toast({ title: "OAuth error", description: error.message, variant: "destructive" })
+      }
+    } catch (error) {
+      toast({
+        title: "Connection error",
+        description: "Unable to connect to Google. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const signUpWithFacebook = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "facebook",
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      })
+
+      if (error) {
+        toast({ title: "OAuth error", description: error.message, variant: "destructive" })
+      }
+    } catch (error) {
+      toast({
+        title: "Connection error",
+        description: "Unable to connect to Facebook. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -91,15 +161,15 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
 
         <form onSubmit={handleSignUp} className="space-y-4 sm:space-y-5 mt-4 sm:mt-6">
           <div className="space-y-2">
-            <Label htmlFor="signup-username">Username</Label>
+            <Label htmlFor="fullName">Full Name</Label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <Input
-                id="signup-username"
-                name="username"
+                id="fullName"
+                name="fullName"
                 type="text"
-                placeholder="Choose a username"
-                value={formData.username}
+                placeholder="Your full name"
+                value={formData.fullName}
                 onChange={handleInputChange}
                 className="pl-10 h-11 sm:h-12"
                 required
@@ -108,11 +178,11 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="signup-email">Email</Label>
+            <Label htmlFor="email">Email</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <Input
-                id="signup-email"
+                id="email"
                 name="email"
                 type="email"
                 placeholder="you@example.com"
@@ -125,11 +195,27 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="signup-password">Password</Label>
+            <Label htmlFor="phone">Phone Number</Label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                placeholder="Your phone number"
+                value={formData.phone}
+                onChange={handleInputChange}
+                className="pl-10 h-11 sm:h-12"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <Input
-                id="signup-password"
+                id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Create a password"
@@ -137,6 +223,7 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
                 onChange={handleInputChange}
                 className="pl-10 pr-10 h-11 sm:h-12"
                 required
+                minLength={6}
               />
               <button
                 type="button"
@@ -150,11 +237,11 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="signup-confirm-password">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <Input
-                id="signup-confirm-password"
+                id="confirmPassword"
                 name="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm your password"
@@ -162,6 +249,7 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
                 onChange={handleInputChange}
                 className="pl-10 pr-10 h-11 sm:h-12"
                 required
+                minLength={6}
               />
               <button
                 type="button"
@@ -172,26 +260,6 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-          </div>
-
-          <div className="flex items-start space-x-3">
-            <Checkbox
-              id="terms"
-              name="agreeToTerms"
-              checked={formData.agreeToTerms}
-              onCheckedChange={(checked) => setFormData((p) => ({ ...p, agreeToTerms: Boolean(checked) }))}
-              className="mt-1"
-            />
-            <Label htmlFor="terms" className="text-sm text-gray-600">
-              I agree to the{" "}
-              <button type="button" className="text-blue-600 hover:underline">
-                Terms of Service
-              </button>{" "}
-              and{" "}
-              <button type="button" className="text-blue-600 hover:underline">
-                Privacy Policy
-              </button>
-            </Label>
           </div>
 
           <Button type="submit" className="w-full h-11 sm:h-12" disabled={isSubmitting}>
@@ -224,33 +292,18 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
               <div className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-xs sm:text-sm">
-              <span className="px-3 bg-white text-gray-500">Or sign up with</span>
+              <span className="px-3 bg-white text-gray-500">Or continue with</span>
             </div>
           </div>
           <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              className="h-10 sm:h-11 bg-transparent"
-              onClick={() =>
-                supabase.auth.signInWithOAuth({
-                  provider: "google",
-                  options: { redirectTo: `${window.location.origin}/auth/callback` },
-                })
-              }
-            >
+            <Button type="button" variant="outline" className="h-10 sm:h-11 bg-transparent" onClick={signUpWithGoogle}>
               <span className="mr-2">🔵</span> Google
             </Button>
             <Button
               type="button"
               variant="outline"
               className="h-10 sm:h-11 bg-transparent"
-              onClick={() =>
-                supabase.auth.signInWithOAuth({
-                  provider: "facebook",
-                  options: { redirectTo: `${window.location.origin}/auth/callback` },
-                })
-              }
+              onClick={signUpWithFacebook}
             >
               <span className="mr-2">🔷</span> Facebook
             </Button>
