@@ -1,12 +1,14 @@
 "use client"
 
 import type React from "react"
+
 import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Mail, Lock, Eye, EyeOff } from "lucide-react"
+import { Separator } from "@/components/ui/separator"
+import { Eye, EyeOff, Mail, Lock } from "lucide-react"
 import { getSupabaseClient } from "@/lib/supabase-client"
 import { useToast } from "@/hooks/use-toast"
 
@@ -17,230 +19,216 @@ interface SignInModalProps {
 }
 
 export default function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignInModalProps) {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [resetEmail, setResetEmail] = useState("")
+  const [isResetLoading, setIsResetLoading] = useState(false)
+
   const supabase = getSupabaseClient()
   const { toast } = useToast()
 
-  const [showPassword, setShowPassword] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [formData, setFormData] = useState({ email: "", password: "" })
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email.trim(),
-        password: formData.password,
-      })
-
-      if (error) {
-        console.error("Sign in error:", error)
-        toast({
-          title: "Sign in failed",
-          description: error.message || "Unable to sign in. Please check your credentials.",
-          variant: "destructive",
-        })
-        return
-      }
-
-      if (data.user) {
-        toast({ title: "Signed in", description: "Welcome back to DreamHome!" })
-        onClose()
-      }
-    } catch (error) {
-      console.error("Unexpected error:", error)
+    if (!email || !password) {
       toast({
-        title: "Connection error",
-        description: "Unable to connect to authentication service. Please try again.",
+        title: "Error",
+        description: "Please fill in all fields",
         variant: "destructive",
       })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleForgotPassword = async () => {
-    if (!formData.email) {
-      toast({ title: "Enter your email", description: "Please enter your email above first." })
       return
     }
 
+    setIsLoading(true)
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(formData.email.trim(), {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        toast({
+          title: "Sign in failed",
+          description: error.message,
+          variant: "destructive",
+        })
+      } else if (data.user) {
+        toast({
+          title: "Welcome back!",
+          description: "You have been successfully signed in.",
+        })
+        onClose()
+        setEmail("")
+        setPassword("")
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!resetEmail) {
+      toast({
+        title: "Error",
+        description: "Please enter your email address",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsResetLoading(true)
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: `${window.location.origin}/auth/update-password`,
       })
 
       if (error) {
-        toast({ title: "Reset failed", description: error.message, variant: "destructive" })
-        return
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Reset email sent",
+          description: "Check your email for password reset instructions.",
+        })
+        setShowForgotPassword(false)
+        setResetEmail("")
       }
-
-      toast({ title: "Password reset sent", description: "Check your inbox for the reset link." })
     } catch (error) {
       toast({
-        title: "Connection error",
-        description: "Unable to send reset email. Please try again.",
+        title: "Error",
+        description: "An unexpected error occurred",
         variant: "destructive",
       })
+    } finally {
+      setIsResetLoading(false)
     }
   }
 
-  const togglePasswordVisibility = () => setShowPassword((v) => !v)
-
-  const signInWithGoogle = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
-      })
-
-      if (error) {
-        toast({ title: "OAuth error", description: error.message, variant: "destructive" })
-      }
-    } catch (error) {
-      toast({
-        title: "Connection error",
-        description: "Unable to connect to Google. Please try again.",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const signInWithFacebook = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "facebook",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
-      })
-
-      if (error) {
-        toast({ title: "OAuth error", description: error.message, variant: "destructive" })
-      }
-    } catch (error) {
-      toast({
-        title: "Connection error",
-        description: "Unable to connect to Facebook. Please try again.",
-        variant: "destructive",
-      })
-    }
+  const handleClose = () => {
+    onClose()
+    setEmail("")
+    setPassword("")
+    setShowForgotPassword(false)
+    setResetEmail("")
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[400px] sm:max-w-md mx-auto p-4 sm:p-6 max-h-[95vh] overflow-y-auto">
-        <DialogHeader className="space-y-2 sm:space-y-3">
-          <DialogTitle className="text-xl sm:text-2xl font-bold text-center text-gray-900">Welcome Back</DialogTitle>
-          <DialogDescription className="text-sm sm:text-base text-center text-gray-600 px-2">
-            Sign in to your DreamHome account
-          </DialogDescription>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-center text-xl font-semibold">
+            {showForgotPassword ? "Reset Password" : "Sign In"}
+          </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSignIn} className="space-y-4 sm:space-y-5 mt-4 sm:mt-6">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="you@example.com"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="pl-10 h-11 sm:h-12"
-                required
-              />
+        {showForgotPassword ? (
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <Input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Your password"
-                value={formData.password}
-                onChange={handleInputChange}
-                className="pl-10 pr-10 h-11 sm:h-12"
-                required
-              />
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => setShowForgotPassword(false)} className="flex-1">
+                Back
+              </Button>
+              <Button type="submit" disabled={isResetLoading} className="flex-1">
+                {isResetLoading ? "Sending..." : "Send Reset Email"}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleSignIn} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
               <button
                 type="button"
-                onClick={togglePasswordVisibility}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline"
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                Forgot password?
               </button>
             </div>
-          </div>
 
-          <div className="text-right">
-            <button
-              type="button"
-              onClick={handleForgotPassword}
-              className="text-xs sm:text-sm text-blue-600 hover:text-blue-700 hover:underline"
-            >
-              Forgot password?
-            </button>
-          </div>
-
-          <Button type="submit" className="w-full h-11 sm:h-12" disabled={isSubmitting}>
-            {isSubmitting ? "Signing in..." : "Sign In"}
-          </Button>
-
-          <div className="relative my-4 sm:my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-xs sm:text-sm">
-              <span className="px-3 bg-white text-gray-500">Don't have an account?</span>
-            </div>
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onSwitchToSignUp}
-            className="w-full h-11 sm:h-12 border-blue-600 text-blue-600 hover:bg-blue-50 bg-transparent"
-            disabled={isSubmitting}
-          >
-            Create Account
-          </Button>
-        </form>
-
-        <div className="mt-4 sm:mt-6 space-y-3">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-xs sm:text-sm">
-              <span className="px-3 bg-white text-gray-500">Or continue with</span>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
-            <Button type="button" variant="outline" className="h-10 sm:h-11 bg-transparent" onClick={signInWithGoogle}>
-              <span className="mr-2">🔵</span> Google
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Signing in..." : "Sign In"}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-10 sm:h-11 bg-transparent"
-              onClick={signInWithFacebook}
-            >
-              <span className="mr-2">🔷</span> Facebook
-            </Button>
-          </div>
-        </div>
+
+            <Separator />
+
+            <div className="text-center text-sm text-gray-600">
+              Don't have an account?{" "}
+              <button
+                type="button"
+                onClick={onSwitchToSignUp}
+                className="text-emerald-600 hover:text-emerald-700 hover:underline font-medium"
+              >
+                Sign up
+              </button>
+            </div>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   )

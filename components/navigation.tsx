@@ -3,11 +3,30 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
-import { Home, UserIcon, LogOut, Menu, X } from "lucide-react"
+import { Home, UserIcon, LogOut, Menu, X, User, Settings, HelpCircle } from "lucide-react"
 import SignInModal from "./sign-in-modal"
 import SignUpModal from "./sign-up-modal"
 import { getSupabaseClient } from "@/lib/supabase-client"
 import { useToast } from "@/hooks/use-toast"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 declare global {
   interface Window {
@@ -25,6 +44,7 @@ export default function Navigation() {
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false)
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false)
   const [user, setUser] = useState<SupabaseUser | null>(null)
+  const [isSignOutDialogOpen, setIsSignOutDialogOpen] = useState(false)
 
   // Logo = Home button; remove "Home" item to avoid duplication
   const links = [
@@ -102,11 +122,25 @@ export default function Navigation() {
     user?.email?.split("@")[0] ||
     "Account"
 
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  const confirmSignOut = () => {
+    setIsSignOutDialogOpen(true)
+  }
+
   const signOut = async () => {
     await supabase.auth.signOut()
     setUser(null)
     toast({ title: "Signed out", description: "You have been signed out." })
     closeMobileMenu()
+    setIsSignOutDialogOpen(false)
   }
 
   if (!allowRender) return null
@@ -143,18 +177,50 @@ export default function Navigation() {
           {/* Desktop Right */}
           <div className="hidden md:flex items-center">
             {user ? (
-              <div className="flex items-center gap-3">
-                <div className="px-3 py-2 rounded-lg border text-sm">
-                  <span className="font-medium">{displayName}</span>{" "}
-                  <span className="text-gray-500">@ {user.email}</span>
-                </div>
-                <button
-                  onClick={signOut}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100"
-                >
-                  <LogOut size={16} /> Sign out
-                </button>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.user_metadata?.avatar_url || "/placeholder.svg"} alt={displayName} />
+                    <AvatarFallback className="bg-emerald-100 text-emerald-700 text-sm font-medium">
+                      {getInitials(displayName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="text-left">
+                    <div className="text-sm font-medium text-gray-900">{displayName}</div>
+                    <div className="text-xs text-gray-500">{user.email}</div>
+                  </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings" className="flex items-center gap-2">
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/help" className="flex items-center gap-2">
+                      <HelpCircle className="h-4 w-4" />
+                      Help & Support
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={confirmSignOut}
+                    className="flex items-center gap-2 text-red-600 focus:text-red-600 focus:bg-red-50"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <button
                 onClick={openSignInModal}
@@ -216,26 +282,53 @@ Mobile overlay + Drawer (scrollable with slide animation)
             {/* Account block */}
             {user ? (
               <div className="mt-4 rounded-xl border border-gray-100 p-4 bg-gray-50">
-                <div className="text-sm">
-                  <div className="font-semibold">
-                    {(user.user_metadata?.full_name as string) ||
-                      (user.user_metadata?.username as string) ||
-                      displayName}
+                <div className="flex items-center gap-3 mb-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={user.user_metadata?.avatar_url || "/placeholder.svg"} alt={displayName} />
+                    <AvatarFallback className="bg-emerald-100 text-emerald-700 font-medium">
+                      {getInitials(displayName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-semibold text-sm">
+                      {(user.user_metadata?.full_name as string) ||
+                        (user.user_metadata?.username as string) ||
+                        displayName}
+                    </div>
+                    <div className="text-gray-500 text-xs">{user.email}</div>
                   </div>
-                  <div className="text-gray-500">{user.email}</div>
                 </div>
-                <div className="mt-3 flex gap-3">
+
+                <div className="space-y-2">
                   <Link
-                    href="/"
+                    href="/profile"
                     onClick={closeMobileMenu}
-                    className="flex-1 text-center text-sm font-medium px-3 py-2 rounded-lg border hover:bg-gray-100"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100"
                   >
-                    Home
+                    <User className="h-4 w-4" />
+                    Profile
+                  </Link>
+                  <Link
+                    href="/settings"
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Settings
+                  </Link>
+                  <Link
+                    href="/help"
+                    onClick={closeMobileMenu}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    Help & Support
                   </Link>
                   <button
-                    onClick={signOut}
-                    className="flex-1 text-center text-sm font-medium px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100"
+                    onClick={confirmSignOut}
+                    className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50"
                   >
+                    <LogOut className="h-4 w-4" />
                     Sign out
                   </button>
                 </div>
@@ -267,6 +360,24 @@ Mobile overlay + Drawer (scrollable with slide animation)
       {/* Modals */}
       <SignInModal isOpen={isSignInModalOpen} onClose={closeSignInModal} onSwitchToSignUp={openSignUpModal} />
       <SignUpModal isOpen={isSignUpModalOpen} onClose={closeSignUpModal} onSwitchToSignIn={switchToSignIn} />
+
+      {/* Sign Out Confirmation Dialog */}
+      <AlertDialog open={isSignOutDialogOpen} onOpenChange={setIsSignOutDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign out confirmation</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to sign out? You will need to sign in again to access your account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={signOut} className="bg-red-600 hover:bg-red-700">
+              Sign out
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

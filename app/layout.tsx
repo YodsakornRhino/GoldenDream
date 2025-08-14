@@ -9,7 +9,7 @@ import ScrollToTop from "@/components/scroll-to-top"
 export const metadata = {
   title: "DreamHome",
   description: "Find, list, and manage properties with DreamHome.",
-    generator: 'v0.dev'
+    generator: 'v0.app'
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
