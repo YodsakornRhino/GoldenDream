@@ -3,12 +3,12 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { getSupabaseClient } from "@/lib/supabase-client"
 import { useToast } from "@/hooks/use-toast"
 
@@ -19,56 +19,58 @@ interface SignUpModalProps {
 }
 
 export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignUpModalProps) {
-  const [fullName, setFullName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  })
 
   const supabase = getSupabaseClient()
   const { toast } = useToast()
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!fullName || !email || !password || !confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       toast({
-        title: "Error",
-        description: "Please fill in all fields",
+        title: "Password mismatch",
+        description: "Passwords do not match. Please try again.",
         variant: "destructive",
       })
       return
     }
 
-    if (password !== confirmPassword) {
+    if (formData.password.length < 6) {
       toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (password.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long",
+        title: "Password too short",
+        description: "Password must be at least 6 characters long.",
         variant: "destructive",
       })
       return
     }
 
     setIsLoading(true)
+
     try {
       const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: formData.email,
+        password: formData.password,
         options: {
           data: {
-            full_name: fullName,
-            username: fullName,
+            full_name: formData.fullName,
+            username: formData.fullName.toLowerCase().replace(/\s+/g, "_"),
           },
         },
       })
@@ -79,21 +81,32 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
           description: error.message,
           variant: "destructive",
         })
-      } else if (data.user) {
-        toast({
-          title: "Account created!",
-          description: "Please check your email to verify your account.",
-        })
-        onClose()
-        setFullName("")
-        setEmail("")
-        setPassword("")
-        setConfirmPassword("")
+        return
       }
+
+      if (data.user && !data.session) {
+        toast({
+          title: "Check your email",
+          description: "We've sent you a confirmation link to complete your registration.",
+        })
+      } else {
+        toast({
+          title: "Welcome to DreamHome!",
+          description: "Your account has been created successfully.",
+        })
+      }
+
+      onClose()
+      setFormData({
+        fullName: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      })
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred",
+        title: "An error occurred",
+        description: "Please try again later.",
         variant: "destructive",
       })
     } finally {
@@ -101,117 +114,127 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
     }
   }
 
-  const handleClose = () => {
-    onClose()
-    setFullName("")
-    setEmail("")
-    setPassword("")
-    setConfirmPassword("")
-  }
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center text-xl font-semibold">Create Account</DialogTitle>
+          <DialogTitle>Create your account</DialogTitle>
+          <DialogDescription>Join DreamHome to find your perfect property</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSignUp} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="fullName">Full Name</Label>
-            <div className="relative">
-              <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                id="fullName"
-                type="text"
-                placeholder="Enter your full name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="pl-10"
-                required
-              />
-            </div>
+            <Input
+              id="fullName"
+              name="fullName"
+              type="text"
+              placeholder="Enter your full name"
+              value={formData.fullName}
+              onChange={handleInputChange}
+              required
+              disabled={isLoading}
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="signup-email">Email</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                id="signup-email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-10"
-                required
-              />
-            </div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+              disabled={isLoading}
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="signup-password">Password</Label>
+            <Label htmlFor="password">Password</Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                id="signup-password"
+                id="password"
+                name="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Create a password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pl-10 pr-10"
+                value={formData.password}
+                onChange={handleInputChange}
                 required
+                disabled={isLoading}
+                minLength={6}
               />
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                disabled={isLoading}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              </Button>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirm Password</Label>
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                id="confirm-password"
+                id="confirmPassword"
+                name="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="pl-10 pr-10"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
                 required
+                disabled={isLoading}
+                minLength={6}
               />
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                disabled={isLoading}
               >
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              </Button>
             </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating account..." : "Create Account"}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating account...
+              </>
+            ) : (
+              "Create account"
+            )}
           </Button>
-
-          <Separator />
-
-          <div className="text-center text-sm text-gray-600">
-            Already have an account?{" "}
-            <button
-              type="button"
-              onClick={onSwitchToSignIn}
-              className="text-emerald-600 hover:text-emerald-700 hover:underline font-medium"
-            >
-              Sign in
-            </button>
-          </div>
         </form>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <Separator className="w-full" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">Already have an account?</span>
+          </div>
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onSwitchToSignIn}
+          disabled={isLoading}
+          className="w-full bg-transparent"
+        >
+          Sign in instead
+        </Button>
       </DialogContent>
     </Dialog>
   )
