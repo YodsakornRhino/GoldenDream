@@ -114,20 +114,8 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
     }
   }
 
-  const handleClose = () => {
-    onClose()
-    setFormData({
-      fullName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    })
-    setShowPassword(false)
-    setShowConfirmPassword(false)
-  }
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Create your account</DialogTitle>
@@ -175,7 +163,7 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
                 onChange={handleInputChange}
                 required
                 disabled={isLoading}
-                className="pr-10"
+                minLength={6}
               />
               <Button
                 type="button"
@@ -202,7 +190,7 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
                 onChange={handleInputChange}
                 required
                 disabled={isLoading}
-                className="pr-10"
+                minLength={6}
               />
               <Button
                 type="button"
@@ -229,14 +217,24 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
           </Button>
         </form>
 
-        <Separator />
-
-        <div className="text-center text-sm">
-          Already have an account?{" "}
-          <Button variant="link" className="p-0 h-auto font-semibold" onClick={onSwitchToSignIn} disabled={isLoading}>
-            Sign in
-          </Button>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <Separator className="w-full" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">Already have an account?</span>
+          </div>
         </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onSwitchToSignIn}
+          disabled={isLoading}
+          className="w-full bg-transparent"
+        >
+          Sign in instead
+        </Button>
       </DialogContent>
     </Dialog>
   )
