@@ -3,11 +3,12 @@
 import type React from "react"
 
 import { useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
+import { Separator } from "@/components/ui/separator"
+import { Eye, EyeOff, Mail, Lock } from "lucide-react"
 import { getSupabaseClient } from "@/lib/supabase-client"
 import { useToast } from "@/hooks/use-toast"
 
@@ -31,10 +32,18 @@ export default function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignI
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    if (!email || !password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      })
+      return
+    }
 
+    setIsLoading(true)
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -45,10 +54,10 @@ export default function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignI
           description: error.message,
           variant: "destructive",
         })
-      } else {
+      } else if (data.user) {
         toast({
           title: "Welcome back!",
-          description: "You have successfully signed in.",
+          description: "You have been successfully signed in.",
         })
         onClose()
         setEmail("")
@@ -57,7 +66,7 @@ export default function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignI
     } catch (error) {
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: "An unexpected error occurred",
         variant: "destructive",
       })
     } finally {
@@ -67,8 +76,16 @@ export default function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignI
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsResetLoading(true)
+    if (!resetEmail) {
+      toast({
+        title: "Error",
+        description: "Please enter your email address",
+        variant: "destructive",
+      })
+      return
+    }
 
+    setIsResetLoading(true)
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: `${window.location.origin}/auth/update-password`,
@@ -76,7 +93,7 @@ export default function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignI
 
       if (error) {
         toast({
-          title: "Reset failed",
+          title: "Error",
           description: error.message,
           variant: "destructive",
         })
@@ -91,7 +108,7 @@ export default function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignI
     } catch (error) {
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: "An unexpected error occurred",
         variant: "destructive",
       })
     } finally {
@@ -109,37 +126,37 @@ export default function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignI
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{showForgotPassword ? "Reset Password" : "Sign In"}</DialogTitle>
-          <DialogDescription>
-            {showForgotPassword
-              ? "Enter your email address and we'll send you a link to reset your password."
-              : "Enter your email and password to sign in to your account."}
-          </DialogDescription>
+          <DialogTitle className="text-center text-xl font-semibold">
+            {showForgotPassword ? "Reset Password" : "Sign In"}
+          </DialogTitle>
         </DialogHeader>
 
         {showForgotPassword ? (
           <form onSubmit={handleForgotPassword} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="reset-email">Email</Label>
-              <Input
-                id="reset-email"
-                type="email"
-                placeholder="Enter your email"
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
             </div>
 
-            <div className="flex flex-col space-y-2">
-              <Button type="submit" disabled={isResetLoading} className="w-full">
-                {isResetLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Send Reset Link
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => setShowForgotPassword(false)} className="flex-1">
+                Back
               </Button>
-              <Button type="button" variant="ghost" onClick={() => setShowForgotPassword(false)} className="w-full">
-                Back to Sign In
+              <Button type="submit" disabled={isResetLoading} className="flex-1">
+                {isResetLoading ? "Sending..." : "Send Reset Email"}
               </Button>
             </div>
           </form>
@@ -147,68 +164,68 @@ export default function SignInModal({ isOpen, onClose, onSwitchToSignUp }: SignI
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 pr-10"
                   required
                 />
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
-                  )}
-                </Button>
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 
-            <div className="flex flex-col space-y-2">
-              <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Sign In
-              </Button>
-              <Button
+            <div className="flex justify-end">
+              <button
                 type="button"
-                variant="ghost"
                 onClick={() => setShowForgotPassword(true)}
-                className="w-full text-sm"
+                className="text-sm text-emerald-600 hover:text-emerald-700 hover:underline"
               >
-                Forgot your password?
-              </Button>
+                Forgot password?
+              </button>
             </div>
 
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Signing in..." : "Sign In"}
+            </Button>
+
+            <Separator />
+
             <div className="text-center text-sm text-gray-600">
-              {"Don't have an account? "}
-              <Button
+              Don't have an account?{" "}
+              <button
                 type="button"
-                variant="link"
                 onClick={onSwitchToSignUp}
-                className="p-0 h-auto font-normal text-emerald-600 hover:text-emerald-700"
+                className="text-emerald-600 hover:text-emerald-700 hover:underline font-medium"
               >
                 Sign up
-              </Button>
+              </button>
             </div>
           </form>
         )}

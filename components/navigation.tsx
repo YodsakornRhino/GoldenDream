@@ -32,14 +32,10 @@ import type { Database } from "@/lib/database.types"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
-declare global {
-  interface Window {
-    __DREAMHOME_NAV_MOUNTED?: boolean
-  }
-}
+// Global state to prevent multiple navigation instances
+let navigationInstance: any = null
 
 export default function Navigation() {
-  const [allowRender, setAllowRender] = useState(false)
   const [isSignInOpen, setIsSignInOpen] = useState(false)
   const [isSignUpOpen, setIsSignUpOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -47,6 +43,7 @@ export default function Navigation() {
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [shouldRender, setShouldRender] = useState(false)
 
   const supabase = getSupabaseClient()
   const { toast } = useToast()
@@ -59,27 +56,23 @@ export default function Navigation() {
     { href: "/blog", label: "Blog" },
   ]
 
-  // Singleton guard to prevent duplicate Navigation rendering
+  // Prevent multiple navigation instances
   useEffect(() => {
-    if (typeof window === "undefined") return
-
-    if (window.__DREAMHOME_NAV_MOUNTED) {
-      setAllowRender(false)
+    if (navigationInstance) {
+      setShouldRender(false)
       return
     }
 
-    window.__DREAMHOME_NAV_MOUNTED = true
-    setAllowRender(true)
+    navigationInstance = true
+    setShouldRender(true)
 
     return () => {
-      if (window.__DREAMHOME_NAV_MOUNTED) {
-        window.__DREAMHOME_NAV_MOUNTED = false
-      }
+      navigationInstance = null
     }
   }, [])
 
   useEffect(() => {
-    if (!allowRender) return
+    if (!shouldRender) return
 
     // Get initial session
     const getInitialSession = async () => {
@@ -115,7 +108,7 @@ export default function Navigation() {
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth, allowRender])
+  }, [supabase.auth, shouldRender])
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -173,8 +166,10 @@ export default function Navigation() {
     return profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User"
   }
 
-  // Don't render if not allowed (singleton protection)
-  if (!allowRender) return null
+  // Don't render if this is not the primary instance
+  if (!shouldRender) {
+    return null
+  }
 
   if (isLoading) {
     return (

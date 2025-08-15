@@ -7,12 +7,11 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   bio TEXT,
   phone TEXT,
   website TEXT,
-  location TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable Row Level Security
+-- Enable RLS (Row Level Security)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- Create policies
@@ -32,10 +31,10 @@ BEGIN
   INSERT INTO public.profiles (id, full_name, username, avatar_url)
   VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name'),
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
     COALESCE(
       NEW.raw_user_meta_data->>'username',
-      LOWER(REPLACE(COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', SPLIT_PART(NEW.email, '@', 1)), ' ', '_'))
+      LOWER(REPLACE(COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email), ' ', '_'))
     ),
     NEW.raw_user_meta_data->>'avatar_url'
   );

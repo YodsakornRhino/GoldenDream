@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { Facebook, Twitter, Instagram, Linkedin, Phone, Mail, MapPin } from "lucide-react"
+import { Home, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin } from "lucide-react"
+import { useEffect, useState } from "react"
 
 declare global {
   interface Window {
@@ -9,134 +10,121 @@ declare global {
   }
 }
 
+/**
+ * Footer พร้อมกันซ้ำ (singleton guard) เพื่อหลีกเลี่ยงการเรนเดอร์ซ้ำ
+ * - ถ้ามี instance อื่นในหน้าอยู่แล้ว จะไม่เรนเดอร์ซ้ำ
+ */
 export default function Footer() {
-  // Singleton guard to prevent duplicate Footer rendering
-  if (typeof window !== "undefined") {
+  const [allowRender, setAllowRender] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
     if (window.__DREAMHOME_FOOTER_MOUNTED) {
-      return null
+      setAllowRender(false)
+      return
     }
     window.__DREAMHOME_FOOTER_MOUNTED = true
-  }
+    setAllowRender(true)
+    return () => {
+      if (window.__DREAMHOME_FOOTER_MOUNTED) window.__DREAMHOME_FOOTER_MOUNTED = false
+    }
+  }, [])
+
+  if (!allowRender) return null
 
   return (
-    <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Company Info */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">DH</span>
-              </div>
-              <span className="text-xl font-bold">DreamHome</span>
-            </div>
-            <p className="text-gray-400 text-sm leading-relaxed">
-              แพลตฟอร์มอสังหาริมทรัพย์ครบวงจรสำหรับทุกคน ค้นหา ซื้อ เช่า หรือประกาศขายได้ในที่เดียว ปลอดภัย และสะดวกขึ้นด้วยเทคโนโลยีสมัยใหม่
+    <footer className="bg-gray-800 text-white py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Brand */}
+          <div>
+            <Link href="/" className="text-2xl font-bold mb-4 flex items-center hover:opacity-90">
+              <Home className="mr-2" size={24} />
+              DreamHome
+            </Link>
+            <p className="text-gray-400 mb-4">
+              Your trusted partner in finding the perfect property. We make real estate simple and accessible for
+              everyone.
             </p>
             <div className="flex space-x-4">
-              <Link href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
-                <Facebook className="h-5 w-5" />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
-                <Twitter className="h-5 w-5" />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
-                <Instagram className="h-5 w-5" />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-emerald-400 transition-colors">
-                <Linkedin className="h-5 w-5" />
-              </Link>
+              {/* Social links (placeholders) */}
+              <a href="#" aria-label="Facebook" className="text-gray-400 hover:text-white transition-colors">
+                <Facebook size={20} />
+              </a>
+              <a href="#" aria-label="Twitter" className="text-gray-400 hover:text-white transition-colors">
+                <Twitter size={20} />
+              </a>
+              <a href="#" aria-label="Instagram" className="text-gray-400 hover:text-white transition-colors">
+                <Instagram size={20} />
+              </a>
+              <a href="#" aria-label="LinkedIn" className="text-gray-400 hover:text-white transition-colors">
+                <Linkedin size={20} />
+              </a>
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Quick Links</h3>
-            <ul className="space-y-2">
+          {/* Quick Links - only pages that exist */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+            <ul className="space-y-2 text-gray-400">
               <li>
-                <Link href="/buy" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
+                <Link href="/" className="hover:text-white transition-colors">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link href="/buy" className="hover:text-white transition-colors">
                   Buy Properties
                 </Link>
               </li>
               <li>
-                <Link href="/rent" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
+                <Link href="/rent" className="hover:text-white transition-colors">
                   Rent Properties
                 </Link>
               </li>
               <li>
-                <Link href="/sell" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
-                  Sell Properties
-                </Link>
-              </li>
-              <li>
-                <Link href="/blog" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
-                  Blog & News
+                <Link href="/sell" className="hover:text-white transition-colors">
+                  Sell Property
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Support */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Support</h3>
-            <ul className="space-y-2">
+          {/* Resources */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Resources</h3>
+            <ul className="space-y-2 text-gray-400">
               <li>
-                <Link href="/help" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
-                  Help Center
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
-                  Contact Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link href="/terms" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
-                  Terms of Service
+                <Link href="/blog" className="hover:text-white transition-colors">
+                  Blog
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Contact Info */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Contact Info</h3>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <Phone className="h-4 w-4 text-emerald-400" />
-                <span className="text-gray-400 text-sm">+66 2 123 4567</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Mail className="h-4 w-4 text-emerald-400" />
-                <span className="text-gray-400 text-sm">info@dreamhome.com</span>
-              </div>
-              <div className="flex items-start space-x-3">
-                <MapPin className="h-4 w-4 text-emerald-400 mt-0.5" />
-                <span className="text-gray-400 text-sm">123 Business District, Bangkok 10110, Thailand</span>
-              </div>
-            </div>
+          {/* Contact */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Contact</h3>
+            <ul className="space-y-2 text-gray-400">
+              <li className="flex items-center">
+                <Phone className="mr-2" size={16} aria-hidden="true" />
+                <span>(555) 123-4567</span>
+              </li>
+              <li className="flex items-center">
+                <Mail className="mr-2" size={16} aria-hidden="true" />
+                <span>info@dreamhome.com</span>
+              </li>
+              <li className="flex items-center">
+                <MapPin className="mr-2" size={16} aria-hidden="true" />
+                <span>123 Real Estate Ave</span>
+              </li>
+              <li className="ml-6">New York, NY 10001</li>
+            </ul>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm">© 2024 DreamHome. All rights reserved.</p>
-          <div className="flex space-x-6 mt-4 sm:mt-0">
-            <Link href="/privacy" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
-              Privacy
-            </Link>
-            <Link href="/terms" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
-              Terms
-            </Link>
-            <Link href="/cookies" className="text-gray-400 hover:text-emerald-400 transition-colors text-sm">
-              Cookies
-            </Link>
-          </div>
+        <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+          <p>&copy; {new Date().getFullYear()} DreamHome. All rights reserved. | Privacy Policy | Terms of Service</p>
         </div>
       </div>
     </footer>
