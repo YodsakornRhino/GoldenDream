@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { getSupabaseClient } from "@/lib/supabase-client"
 import { useToast } from "@/hooks/use-toast"
@@ -19,40 +18,30 @@ interface SignUpModalProps {
 }
 
 export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignUpModalProps) {
-  const [isLoading, setIsLoading] = useState(false)
+  const [fullName, setFullName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  })
+  const [isLoading, setIsLoading] = useState(false)
 
   const supabase = getSupabaseClient()
   const { toast } = useToast()
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (formData.password !== formData.confirmPassword) {
+    if (password !== confirmPassword) {
       toast({
-        title: "Password mismatch",
-        description: "Passwords do not match. Please try again.",
+        title: "Passwords don't match",
+        description: "Please make sure your passwords match.",
         variant: "destructive",
       })
       return
     }
 
-    if (formData.password.length < 6) {
+    if (password.length < 6) {
       toast({
         title: "Password too short",
         description: "Password must be at least 6 characters long.",
@@ -64,13 +53,12 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
     setIsLoading(true)
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
         options: {
           data: {
-            full_name: formData.fullName,
-            username: formData.fullName.toLowerCase().replace(/\s+/g, "_"),
+            full_name: fullName,
           },
         },
       })
@@ -81,32 +69,21 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
           description: error.message,
           variant: "destructive",
         })
-        return
-      }
-
-      if (data.user && !data.session) {
-        toast({
-          title: "Check your email",
-          description: "We've sent you a confirmation link to complete your registration.",
-        })
       } else {
         toast({
-          title: "Welcome to DreamHome!",
-          description: "Your account has been created successfully.",
+          title: "Account created!",
+          description: "Please check your email to verify your account.",
         })
+        onClose()
+        setFullName("")
+        setEmail("")
+        setPassword("")
+        setConfirmPassword("")
       }
-
-      onClose()
-      setFormData({
-        fullName: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-      })
     } catch (error) {
       toast({
-        title: "An error occurred",
-        description: "Please try again later.",
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -114,26 +91,32 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
     }
   }
 
+  const handleClose = () => {
+    onClose()
+    setFullName("")
+    setEmail("")
+    setPassword("")
+    setConfirmPassword("")
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create your account</DialogTitle>
-          <DialogDescription>Join DreamHome to find your perfect property</DialogDescription>
+          <DialogTitle>Create Account</DialogTitle>
+          <DialogDescription>Enter your information to create a new account.</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSignUp} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="fullName">Full Name</Label>
             <Input
               id="fullName"
-              name="fullName"
               type="text"
               placeholder="Enter your full name"
-              value={formData.fullName}
-              onChange={handleInputChange}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               required
-              disabled={isLoading}
             />
           </div>
 
@@ -141,13 +124,11 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
-              name="email"
               type="email"
               placeholder="Enter your email"
-              value={formData.email}
-              onChange={handleInputChange}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
-              disabled={isLoading}
             />
           </div>
 
@@ -156,14 +137,11 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
             <div className="relative">
               <Input
                 id="password"
-                name="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Create a password"
-                value={formData.password}
-                onChange={handleInputChange}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={isLoading}
-                minLength={6}
               />
               <Button
                 type="button"
@@ -171,9 +149,12 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
                 size="sm"
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => setShowPassword(!showPassword)}
-                disabled={isLoading}
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-400" />
+                )}
               </Button>
             </div>
           </div>
@@ -183,14 +164,11 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
             <div className="relative">
               <Input
                 id="confirmPassword"
-                name="confirmPassword"
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm your password"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                disabled={isLoading}
-                minLength={6}
               />
               <Button
                 type="button"
@@ -198,43 +176,33 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
                 size="sm"
                 className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                disabled={isLoading}
               >
-                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-400" />
+                )}
               </Button>
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating account...
-              </>
-            ) : (
-              "Create account"
-            )}
+          <Button type="submit" disabled={isLoading} className="w-full">
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Create Account
           </Button>
+
+          <div className="text-center text-sm text-gray-600">
+            Already have an account?{" "}
+            <Button
+              type="button"
+              variant="link"
+              onClick={onSwitchToSignIn}
+              className="p-0 h-auto font-normal text-emerald-600 hover:text-emerald-700"
+            >
+              Sign in
+            </Button>
+          </div>
         </form>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <Separator className="w-full" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">Already have an account?</span>
-          </div>
-        </div>
-
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onSwitchToSignIn}
-          disabled={isLoading}
-          className="w-full bg-transparent"
-        >
-          Sign in instead
-        </Button>
       </DialogContent>
     </Dialog>
   )

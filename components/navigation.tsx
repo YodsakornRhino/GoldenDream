@@ -51,7 +51,7 @@ export default function Navigation() {
   const supabase = getSupabaseClient()
   const { toast } = useToast()
 
-  // Remove Home from navigation links since Logo serves as Home button
+  // Navigation links without Home since Logo serves as Home button
   const navLinks = [
     { href: "/buy", label: "Buy" },
     { href: "/rent", label: "Rent" },
@@ -62,30 +62,41 @@ export default function Navigation() {
   // Singleton guard to prevent duplicate Navigation rendering
   useEffect(() => {
     if (typeof window === "undefined") return
+
     if (window.__DREAMHOME_NAV_MOUNTED) {
       setAllowRender(false)
       return
     }
+
     window.__DREAMHOME_NAV_MOUNTED = true
     setAllowRender(true)
+
     return () => {
-      if (window.__DREAMHOME_NAV_MOUNTED) window.__DREAMHOME_NAV_MOUNTED = false
+      if (window.__DREAMHOME_NAV_MOUNTED) {
+        window.__DREAMHOME_NAV_MOUNTED = false
+      }
     }
   }, [])
 
   useEffect(() => {
+    if (!allowRender) return
+
     // Get initial session
     const getInitialSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
 
-      if (session?.user) {
-        await fetchProfile(session.user.id)
+        if (session?.user) {
+          await fetchProfile(session.user.id)
+        }
+      } catch (error) {
+        console.error("Error getting session:", error)
+      } finally {
+        setIsLoading(false)
       }
-
-      setIsLoading(false)
     }
 
     getInitialSession()
@@ -104,7 +115,7 @@ export default function Navigation() {
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [supabase.auth, allowRender])
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -162,6 +173,7 @@ export default function Navigation() {
     return profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User"
   }
 
+  // Don't render if not allowed (singleton protection)
   if (!allowRender) return null
 
   if (isLoading) {
