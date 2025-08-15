@@ -114,8 +114,20 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
     }
   }
 
+  const handleClose = () => {
+    onClose()
+    setFormData({
+      fullName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    })
+    setShowPassword(false)
+    setShowConfirmPassword(false)
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Create your account</DialogTitle>
@@ -163,7 +175,7 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
                 onChange={handleInputChange}
                 required
                 disabled={isLoading}
-                minLength={6}
+                className="pr-10"
               />
               <Button
                 type="button"
@@ -190,7 +202,7 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
                 onChange={handleInputChange}
                 required
                 disabled={isLoading}
-                minLength={6}
+                className="pr-10"
               />
               <Button
                 type="button"
@@ -217,24 +229,14 @@ export default function SignUpModal({ isOpen, onClose, onSwitchToSignIn }: SignU
           </Button>
         </form>
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <Separator className="w-full" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">Already have an account?</span>
-          </div>
-        </div>
+        <Separator />
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onSwitchToSignIn}
-          disabled={isLoading}
-          className="w-full bg-transparent"
-        >
-          Sign in instead
-        </Button>
+        <div className="text-center text-sm">
+          Already have an account?{" "}
+          <Button variant="link" className="p-0 h-auto font-semibold" onClick={onSwitchToSignIn} disabled={isLoading}>
+            Sign in
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   )

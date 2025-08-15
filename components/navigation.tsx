@@ -32,14 +32,10 @@ import type { Database } from "@/lib/database.types"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
-declare global {
-  interface Window {
-    __DREAMHOME_NAV_MOUNTED?: boolean
-  }
-}
+// Global state to prevent multiple navigation instances
+let navigationInstance: any = null
 
 export default function Navigation() {
-  const [allowRender, setAllowRender] = useState(false)
   const [isSignInOpen, setIsSignInOpen] = useState(false)
   const [isSignUpOpen, setIsSignUpOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -47,11 +43,12 @@ export default function Navigation() {
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [shouldRender, setShouldRender] = useState(false)
 
   const supabase = getSupabaseClient()
   const { toast } = useToast()
 
-  // Remove Home from navigation links since Logo serves as Home button
+  // Navigation links without Home since Logo serves as Home button
   const navLinks = [
     { href: "/buy", label: "Buy" },
     { href: "/rent", label: "Rent" },
@@ -59,33 +56,40 @@ export default function Navigation() {
     { href: "/blog", label: "Blog" },
   ]
 
-  // Singleton guard to prevent duplicate Navigation rendering
+  // Prevent multiple navigation instances
   useEffect(() => {
-    if (typeof window === "undefined") return
-    if (window.__DREAMHOME_NAV_MOUNTED) {
-      setAllowRender(false)
+    if (navigationInstance) {
+      setShouldRender(false)
       return
     }
-    window.__DREAMHOME_NAV_MOUNTED = true
-    setAllowRender(true)
+
+    navigationInstance = true
+    setShouldRender(true)
+
     return () => {
-      if (window.__DREAMHOME_NAV_MOUNTED) window.__DREAMHOME_NAV_MOUNTED = false
+      navigationInstance = null
     }
   }, [])
 
   useEffect(() => {
+    if (!shouldRender) return
+
     // Get initial session
     const getInitialSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
 
-      if (session?.user) {
-        await fetchProfile(session.user.id)
+        if (session?.user) {
+          await fetchProfile(session.user.id)
+        }
+      } catch (error) {
+        console.error("Error getting session:", error)
+      } finally {
+        setIsLoading(false)
       }
-
-      setIsLoading(false)
     }
 
     getInitialSession()
@@ -104,7 +108,7 @@ export default function Navigation() {
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [supabase.auth, shouldRender])
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -162,7 +166,10 @@ export default function Navigation() {
     return profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User"
   }
 
-  if (!allowRender) return null
+  // Don't render if this is not the primary instance
+  if (!shouldRender) {
+    return null
+  }
 
   if (isLoading) {
     return (
