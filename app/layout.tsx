@@ -16,15 +16,20 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-white text-gray-900 antialiased">
+        {/* Navigation แสดงจาก layout ที่เดียว */}
         <Navigation />
 
+        {/* เลื่อนขึ้นบนสุดอัตโนมัติเมื่อเปลี่ยนเส้นทาง */}
         <Suspense fallback={null}>
           <ScrollToTop />
         </Suspense>
 
         <main className="min-h-[60vh]">{children}</main>
 
+        {/* Footer แสดงจาก layout ที่เดียว */}
         <Footer />
+
+        {/* Global toasts */}
         <Toaster />
       </body>
     </html>

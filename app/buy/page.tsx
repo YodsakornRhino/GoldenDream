@@ -12,12 +12,12 @@ const inter = Inter({ subsets: ["latin"] })
 export default function Home() {
   return (
     <div className={`${inter.className} bg-gray-50`}>
-      
+      <Navigation />
       <HeroSection />
       <FeaturedProperties />
       <PropertyListings />
       <CallToAction />
-      
+      <Footer />
       <ChatWidget />
     </div>
   )

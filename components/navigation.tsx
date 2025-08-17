@@ -32,6 +32,9 @@ import type { Database } from "@/lib/database.types"
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"]
 
+// Global state to prevent multiple navigation instances
+let navigationInstance: any = null
+
 export default function Navigation() {
   const [isSignInOpen, setIsSignInOpen] = useState(false)
   const [isSignUpOpen, setIsSignUpOpen] = useState(false)
@@ -40,6 +43,7 @@ export default function Navigation() {
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [shouldRender, setShouldRender] = useState(false)
 
   const supabase = getSupabaseClient()
   const { toast } = useToast()
@@ -52,7 +56,24 @@ export default function Navigation() {
     { href: "/blog", label: "Blog" },
   ]
 
+  // Prevent multiple navigation instances
   useEffect(() => {
+    if (navigationInstance) {
+      setShouldRender(false)
+      return
+    }
+
+    navigationInstance = true
+    setShouldRender(true)
+
+    return () => {
+      navigationInstance = null
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!shouldRender) return
+
     // Get initial session
     const getInitialSession = async () => {
       try {
@@ -87,7 +108,7 @@ export default function Navigation() {
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [supabase.auth, shouldRender])
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -143,6 +164,11 @@ export default function Navigation() {
 
   const getUserDisplayName = () => {
     return profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User"
+  }
+
+  // Don't render if this is not the primary instance
+  if (!shouldRender) {
+    return null
   }
 
   if (isLoading) {
