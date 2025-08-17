@@ -25,8 +25,7 @@ const inter = Inter({ subsets: ["latin"] })
 export default function Home() {
   return (
     <div className={`${inter.className} bg-gray-50 text-gray-900`}>
-      <Navigation />
-
+      
       {/* HERO */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700" />
@@ -326,7 +325,7 @@ export default function Home() {
         </div>
       </section>
 
-      <Footer />
+      
       <ChatWidget />
     </div>
   )

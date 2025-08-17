@@ -80,7 +80,7 @@ export default function BlogPage() {
 
   return (
     <div className={`${inter.className} bg-gray-50 min-h-screen`}>
-      <Navigation />
+      
 
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-teal-600 to-cyan-600 text-white py-16">
@@ -225,7 +225,7 @@ export default function BlogPage() {
         </div>
       </section>
 
-      <Footer />
+      
       <ChatWidget />
     </div>
   )
