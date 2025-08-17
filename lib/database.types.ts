@@ -12,6 +12,7 @@ export interface Database {
           bio: string | null
           phone: string | null
           website: string | null
+          location: string | null
           created_at: string
           updated_at: string
         }
@@ -23,6 +24,7 @@ export interface Database {
           bio?: string | null
           phone?: string | null
           website?: string | null
+          location?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -34,6 +36,7 @@ export interface Database {
           bio?: string | null
           phone?: string | null
           website?: string | null
+          location?: string | null
           created_at?: string
           updated_at?: string
         }
