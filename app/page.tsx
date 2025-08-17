@@ -26,6 +26,7 @@ export default function Home() {
   return (
     <div className={`${inter.className} bg-gray-50 text-gray-900`}>
       
+
       {/* HERO */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700" />

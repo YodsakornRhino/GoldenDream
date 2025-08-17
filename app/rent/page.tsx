@@ -157,7 +157,7 @@ export default function RentPage() {
         </div>
       </section>
 
-    
+      
       <ChatWidget />
     </div>
   )

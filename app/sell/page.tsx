@@ -14,6 +14,7 @@ export default function SellPage() {
   return (
     <div className={`${inter.className} bg-gray-50 min-h-screen`}>
       
+
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-purple-600 to-pink-600 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
